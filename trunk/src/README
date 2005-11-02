@@ -1,0 +1,29 @@
+SCELib Readme
+
+Simple C Extension Library (scelib) provides usual C programming tasks, such as
+string management, command line parsing and so on. The goal of this library is
+not to replace big ones like glib, but to provide a quick way to create simple
+programs.
+
+Its most important aspects are :
+- Free software, under the GNU 'Lesser' Library Public License
+- Easy to compile, on any platform, with the minimal compilation tool set, and
+  without those autoconf/automake tools which are great for complicated
+  projects, but to tricky for little ones, like scelib.
+- Slim, so it can be linked in a static way to programs. Making a shared
+  library is possible too, but for those who just want a simple API as part of
+  their language environment, the static archive is a good thing.
+- Slim, but in its code too. Using scelib is just like using functions from the
+  C standard library, but without their restrictions :-). You've a minimal set
+  of API, easily identifiable.
+- Portable on any platform, not only unices or only Windows. SCELib only uses
+  C standard library fucntions, and when thoses are known not to be right
+  implemented or not implemented at all on some platforms, SCELib gives its
+  version, which is often easier to use.
+
+For build/installation instructions, see the INSTALL file in the same directory
+that this README.
+
+Enjoy, riri
+
+scelib is (c) 2005 Richard 'riri' Gill <riribreizh@gmail.com>
