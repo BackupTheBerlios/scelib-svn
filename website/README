@@ -1,0 +1,15 @@
+The website is genetaed from xml source files, which are processed by
+xsltproc (from libxslt) to generate the final html files.
+
+How this's organized ?
+
+I put in the subversion repository the source files, composed of:
+* the xml files, containing datas, and stored in the src directory
+* the xsl files, containing the rules to process the transformation,
+  and stored in the trans directory
+* all other files, needed for the web site, like css and image files,
+  and contained in the res directory.
+* the Makefiles, in each directory, which can be called to generate the
+  output.
+* the htdocs directory will contain the make result : the web site
+
