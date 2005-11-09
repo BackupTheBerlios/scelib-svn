@@ -1,31 +1,30 @@
-# Makefile for scelib web site generation
 
-# tester le generic pattern matching:
-# htdocs/index.fr.html: %.fr.html: %.xml
-# 
 OUTDIR = htdocs
+
 OUTLANGS = fr en
 
-all: $(OUTDIR)/index.fr.html
-	echo "pouet"
+XSLT = xsltproc
+LANGPRM = --stringparam lang
+
+TARGETS = $(OUTDIR)/index.fr.html $(OUTDIR)/index.en.html \
+	$(OUTDIR)/legal.fr.html $(OUTDIR)/legal.en.html
+
+all: $(TARGETS)
 
 clean: FORCE
-	# remove generated temporary .mak files
-	-rm *.mak
+	-rm -f $(OUTDIR)/*.html
 
-src.mak:
-	# find all xml source files
-	find . -name '*.xml' -not -name 'menu.xml' > src.mak
-
-out.mak: src.mak
-	# generate needed output files, according to defined languages
-	if [ -e $@ ]; then rm $@ ; touch $@ ; fi
-	for l in $(OUTLANGS); do sed -e "s/xml/$$l.html/g" < $< >> $@; done
-
-	
 $(OUTDIR)/index.fr.html: index.xml
-	$(XSLTPROC) $(XSLTPARAM) lang fr ../trans/main.xsl $< > $@
+	$(XSLT) $(LANGPRM) fr main.xsl $< > $@
 
-# old fashion phony target
+$(OUTDIR)/index.en.html: index.xml
+	$(XSLT) $(LANGPRM) en main.xsl $< > $@
+
+$(OUTDIR)/legal.fr.html: legal.xml
+	$(XSLT) $(LANGPRM) fr main.xsl $< > $@
+
+$(OUTDIR)/legal.en.html: legal.xml
+	$(XSLT) $(LANGPRM) en main.xsl $< > $@
+
 FORCE:
 
