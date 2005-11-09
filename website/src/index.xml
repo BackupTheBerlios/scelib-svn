@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<page>
+
+	<title>
+		<text xml:lang='en'>Home</text>
+		<text xml:lang='fr'>Accueil</text>
+	</title>
+
+	<content xml:lang='en'>
+		<section id='intro' title='Introduction'>
+			<p>
+				SCELib stands for <i><b>S</b>imple <b>C</b> <b>E</b>xtension
+				<b>Lib</b>rary</i>, and provides usual C programming tasks, such as
+				string management, command line parsing and so on. The goal of this
+				library is not to replace the bigs one like <b>glib</b>, but to provide
+				an easy way to quiekly create simple programs, without loosing time in
+				reccuring programming efforts.
+			</p>
+		</section>
+	</content>
+
+	<content xml:lang='fr'>
+		<section id='intro' title='Introduction'>
+			<p>
+				SCELib signifie <i><b>S</b>imple <b>C</b> <b>E</b>xtension
+				<b>Lib</b>rary</i> (simple bibliothèque d'extension C), et fournit
+				des solutions toutes prêtes à des problèmes usuels de programmation en
+				C, comme la gestion des chaînes de caractères, la lecture des arguments
+				de la ligne de commande, etc... Le but de cette bibliothèque n'est pas
+				de remplacer les grands ténors comme la <b>glib</b>, mais d'aider le
+				programmeur à développement facilement et rapidement des programmes
+				simples, sans perdre de temps sur des problèmes récurrents.
+			</p>
+	</section>
+</content>
+
+</page>
+

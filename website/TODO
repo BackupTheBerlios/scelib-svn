@@ -1,0 +1,20 @@
+the website generator TODO list :-)
+
+* create an xml schema or dtd for the input xml files, so they can be validated
+  during transformation. Thoses should be in the trans directory, along with
+  xsl files.
+
+* all :-) :
+  - the datas (xml)
+  - the Makefiles
+  - the css
+  - add images if needed
+  - complete xsl
+
+* xml files to do (according to the menu.xml) :
+  - index.xml (in progress)
+  - about.xml
+  - news.xml (this should be dynamic, from another xml file maybe)
+  - legal.xml
+  - prj.xml
+

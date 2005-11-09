@@ -13,3 +13,11 @@ I put in the subversion repository the source files, composed of:
   output.
 * the htdocs directory will contain the make result : the web site
 
+The make command will be used to :
+* update the current tree from svn
+* generate files which are added or updated (if the xsl files are modified,
+  of course, all is regenerated)
+* install the generated files to output destination
+* of course, clean the generated tree
+* why not, pack the sources ?
+
