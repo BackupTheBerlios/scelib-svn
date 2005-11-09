@@ -1,6 +1,9 @@
 # Makefile for scelib web site generation
 
-OUTDIR = ../htdocs
+# tester le generic pattern matching:
+# htdocs/index.fr.html: %.fr.html: %.xml
+# 
+OUTDIR = htdocs
 OUTLANGS = fr en
 
 all: $(OUTDIR)/index.fr.html
