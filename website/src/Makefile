@@ -1,30 +1,21 @@
+# Makefile for source xml files
+# The major part of the make rules are in the auto-generated Makefile.rules
+# in the top directory.
 
-OUTDIR = htdocs
-
-OUTLANGS = fr en
+include ../Makefile.rules
 
 XSLT = xsltproc
 LANGPRM = --stringparam lang
 
-TARGETS = $(OUTDIR)/index.fr.html $(OUTDIR)/index.en.html \
-	$(OUTDIR)/legal.fr.html $(OUTDIR)/legal.en.html
-
-all: $(TARGETS)
+all: build
+	
+build: $(TARGETS)
 
 clean: FORCE
 	-rm -f $(OUTDIR)/*.html
 
-$(OUTDIR)/index.fr.html: index.xml
-	$(XSLT) $(LANGPRM) fr main.xsl $< > $@
-
-$(OUTDIR)/index.en.html: index.xml
-	$(XSLT) $(LANGPRM) en main.xsl $< > $@
-
-$(OUTDIR)/legal.fr.html: legal.xml
-	$(XSLT) $(LANGPRM) fr main.xsl $< > $@
-
-$(OUTDIR)/legal.en.html: legal.xml
-	$(XSLT) $(LANGPRM) en main.xsl $< > $@
-
+# FORCE is a special target reproducing .PHONY for old make tools which
+# don't support that
 FORCE:
+
 
