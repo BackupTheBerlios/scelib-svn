@@ -29,7 +29,7 @@ build: update
 	make $(TARGETS)
 
 clean:
-	-rm -f $(OUTDIR)/*.html
+	-rm -f $(OUTDIR)/*
 	-rm -f Makefile.rules
 
 update:

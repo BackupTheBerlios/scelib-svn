@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu>
-	<item name='index'>
+	<item name='home'>
 		<text lang='en'>Home</text>
 		<text lang='fr'>Accueil</text>
 	</item>
