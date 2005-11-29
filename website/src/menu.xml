@@ -4,9 +4,9 @@
 		<text lang='en'>Home</text>
 		<text lang='fr'>Accueil</text>
 	</item>
-	<item name='about'>
-		<text lang='en'>About</text>
-		<text lang='fr'>A propos</text>
+	<item name='features'>
+		<text lang='en'>Features</text>
+		<text lang='fr'>Fonctionnalités</text>
 	</item>
 	<item name='news'>
 		<text lang='en'>News</text>
