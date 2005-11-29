@@ -32,7 +32,8 @@ done
 echo "# generic rule to make html from xml" >> Makefile.tmp
 echo >> Makefile.tmp
 echo "$outdir/%.html: $srcdir/%.xml" >> Makefile.tmp
-echo -e "\t\$(XSLTPROC) \$(PROCDIR)/main.xsl $< > \$@" >> Makefile.tmp
+echo -e "\t\$(XSLTPROC) \$(XSLTFLAGS) \$(PROCDIR)/main.xsl $< > \$@" >> Makefile.tmp
+echo -e "\t\$(TIDY) \$(TIDYFLAGS) \$@ 2>/dev/null" >> Makefile.tmp
 echo >> Makefile.tmp
 
 sed -e "s@TARGETS =@TARGETS = $targets@" < Makefile.tmp > Makefile.rules
