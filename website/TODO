@@ -6,15 +6,14 @@ the website generator TODO list :-)
 
 * all :-) :
   - the datas (xml)
-  - the Makefiles
   - the css
   - add images if needed
-  - complete xsl
+  - complete the main xsl file
 
 * xml files to do (according to the menu.xml) :
-  - index.xml (in progress)
-  - about.xml
-  - news.xml (this should be dynamic, from another xml file maybe)
-  - legal.xml (in progress)
-  - prj.xml
+  - index.*.xml (in progress)
+  - about.*.xml
+  - news.*.xml (this should be dynamic, from another xml file maybe)
+  - legal.*.xml (in progress)
+  - prj.*.xml
 

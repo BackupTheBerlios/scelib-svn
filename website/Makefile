@@ -1,29 +1,37 @@
+# Makefile for html output
 
 SRCDIR = src
+PROCDIR = proc
 OUTDIR = htdocs
+RESDIR = res
+
+XSLTPROC = xsltproc -nonet
+
+-include Makefile.rules
 
 all: help
 
-build: Makefile.rules
-	make -C $(SRCDIR) $@
+help:
+	@echo "make {build|clean|update|help]"
+	@echo " default target is 'build'"
+	@echo " * build will rebuild the website"
+	@echo " * clean will delete all generated files"
+	@echo " * update will update Makefile.rules to all found source files"
+	@echo " * help will output this notice"
+
+build: update
+	make $(TARGETS)
 
 clean:
-	make -C $(SRCDIR) $@
-	-rm Makefile.rules
+	-rm -f $(OUTDIR)/*.html
+	-rm -f Makefile.rules
 
-help:
-	@echo "make [build|clean|update|help]"
-	@echo "  default target is 'build'"
-	@echo "  * make build will rebuild the website"
-	@echo "  * make clean will delete all generated files"
-	@echo "  * make update will update Makefile.rules to all found xml files"
-	@echo "  * make help will output this notice"
-
-# redirection to be able to call 'make update' to force Makefile.rules
-# regeneration
-Makefile.rules:
-	make update
+#Makefile.rules: update
 
 update:
-	. ./update-rules.sh $(SRCDIR) $(OUTDIR)
+	. $(PROCDIR)/update-rules.sh $(SRCDIR) $(OUTDIR)
+
+# FORCE is a psecial target reproducing .PHONY for old tools which don't
+# support that
+FORCE:
 
