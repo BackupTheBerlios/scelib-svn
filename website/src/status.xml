@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<status>
+
+	<title>
+		<text lang="fr">Etat d'avancement des travaux</text>
+		<text lang="en">Current status of work</text>
+	</title>
+
+	<header>
+		<col>
+			<text lang="fr">Elément</text>
+			<text lang="en">Element</text>
+		</col>
+		<col>
+			<text lang="fr">Statut</text>
+			<text lang="en">Status</text>
+		</col>
+		<col>
+			<text lang="fr">Description/A faire</text>
+			<text lang="en">Description/To do</text>
+		</col>
+	</header>
+
+	<item>
+		<title>
+			<text lang="fr">Organisation de la compilation</text>
+			<text lang="en">Compilation organization</text>
+		</title>
+		<state>0%</state>
+		<comment>
+			<text lang="fr">Makefiles, reconnaissance OS et mise à jour des dépendances</text>
+			<text lang="en">Makefiles, OS detection and dependencies updates</text>
+		</comment>
+	</item>
+
+	<item>
+		<title>
+			<text lang="fr">Chaînes</text>
+			<text lang="en">Strings</text>
+		</title>
+		<state>0%</state>
+		<comment>
+			<text lang="fr">A venir.</text>
+			<text lang="en">Soon updated.</text>
+		</comment>
+	</item>
+
+	<!-- ... -->
+
+</status>
