@@ -1,8 +1,9 @@
 # Makefile to build html files from xml one
 
 TARGETS = home.fr.html home.en.html \
-	  legal.fr.html legal.en.html \
-	  features.fr.html
+	about.fr.html about.en.html \
+	features.fr.html features.en.html \
+	legal.fr.html legal.en.html
 
 all: build
 
@@ -19,6 +20,7 @@ install: build
 	install -d ../$(OUTDIR)
 	for f in *.html; do \
 	  [ $$f -nt ../$(OUTDIR)/$$f ] && { \
+	    echo ">> $$f" ; \
 	    cp $$f ../$(OUTDIR)/$$f ; \
 	    $(TIDY) $(TIDYFLAGS) $$f ; \
 	  } ; \
@@ -30,12 +32,9 @@ uninstall:
 	done
 
 features.%.html: features.%.xml status.xml ../$(PROCDIR)/main.xsl
-#	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ ; \
-#	if [ $$? -ne 0 ]; then \
-#	  rm -f $@ ; \
-#	else \
-#	  $(TIDY) $(TIDYFLAGS) $@ ; \
-#	fi
+	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
+
+legal.%.html: legal.%.xml authors.xml ../$(PROCDIR)/main.xsl
 	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
 
 %.html: %.xml menu.xml ../$(PROCDIR)/main.xsl
