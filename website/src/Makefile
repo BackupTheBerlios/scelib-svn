@@ -24,13 +24,13 @@ uninstall:
 	  rm -f ../$(OUTDIR)/$$f ; \
 	done
 
-features.%.html: features.%.xml status.xml ../$(PROCDIR)/main.xsl
+features.%.html: features.%.xml status.xml shared.xml ../$(PROCDIR)/main.xsl
 	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
 
-legal.%.html: legal.%.xml authors.xml ../$(PROCDIR)/main.xsl
+legal.%.html: legal.%.xml authors.xml shared.xml ../$(PROCDIR)/main.xsl
 	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
 
-%.html: %.xml menu.xml ../$(PROCDIR)/main.xsl
+%.html: %.xml menu.xml shared.xml ../$(PROCDIR)/main.xsl
 	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
 
 publish:
