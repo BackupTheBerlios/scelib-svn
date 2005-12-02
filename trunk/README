@@ -6,7 +6,7 @@ not to replace big ones like glib, but to provide a quick way to create simple
 programs.
 
 Its most important aspects are :
-- Free software, under the GNU 'Lesser' Library Public License
+- Free software, under the GNU Library Public License
 - Easy to compile, on any platform, with the minimal compilation tool set, and
   without those autoconf/automake tools which are great for complicated
   projects, but to tricky for little ones, like scelib.
@@ -26,4 +26,4 @@ that this README.
 
 Enjoy, riri
 
-scelib is (c) 2005 Richard 'riri' Gill <riribreizh@gmail.com>
+scelib is (c) 2005 Richard 'riri' Gill <richard@houbathecat.info>
