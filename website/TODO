@@ -8,12 +8,10 @@ the website generator TODO list :-)
   - the datas (xml)
   - the css
   - add images if needed
-  - complete the main xsl file
+  - split the main xsl file into small ones
 
 * xml files to do (according to the menu.xml) :
-  - index.*.xml (in progress)
-  - about.*.xml
-  - news.*.xml (this should be dynamic, from another xml file maybe)
-  - legal.*.xml (in progress)
-  - prj.*.xml
+  - index.*.xml (basic)
+  - features.*.xml (complete the table)
+  - prj.*.xml (to fill entirely)
 

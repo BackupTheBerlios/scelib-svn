@@ -2,8 +2,10 @@
 
 TARGETS = home.fr.html home.en.html \
 	about.fr.html about.en.html \
+	news.fr.html news.en.html \
 	features.fr.html features.en.html \
-	legal.fr.html legal.en.html
+	legal.fr.html legal.en.html \
+	prj.fr.html prj.en.html
 
 all: build
 
@@ -30,6 +32,9 @@ features.%.html: features.%.xml status.xml shared.xml ../$(PROCDIR)/main.xsl
 legal.%.html: legal.%.xml authors.xml shared.xml ../$(PROCDIR)/main.xsl
 	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
 
+news.%.html: news.%.xml newsdb.xml shared.xml ../$(PROCDIR)/main.xsl
+	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
+
 %.html: %.xml menu.xml shared.xml ../$(PROCDIR)/main.xsl
 	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
 
@@ -37,9 +42,10 @@ publish:
 	-install -d $(DESTDIR)
 	for f in *.html; do \
 	  [ $$f -nt $(DESTDIR)/$$f ] && { \
-	    echo ">> $$f" ; \
-	    cp $$f $(DESTDIR)/$$f ; \
+	    cp $$f $(DESTDIR)/$$f && \
 	    $(TIDY) $(TIDYFLAGS) $$f ; \
+	    [ $$? -ne 0 ] && echo ">> $$f ($$?)" ; \
 	  } ; \
+	  : ; \
 	done
 

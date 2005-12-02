@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu>
-	<item name='home'>
-		<text lang='en'>Home</text>
-		<text lang='fr'>Accueil</text>
-	</item>
-	<item name='about'>
-		<text lang='en'>About</text>
-		<text lang='fr'>A propos</text>
-	</item>
-	<item name='features'>
-		<text lang='en'>Features</text>
-		<text lang='fr'>Fonctionnalités</text>
-	</item>
-	<item name='news'>
-		<text lang='en'>News</text>
-		<text lang='fr'>Actualités</text>
-	</item>
-	<item name='legal'>
-		<text lang='en'>License and credits</text>
-		<text lang='fr'>Licence et remerciements</text>
-	</item>
-	<item name='prj'>
-		<text lang='en'>Download and project</text>
-		<text lang='fr'>Téléchargement et projet</text>
-	</item>
+  <item name='home'>
+    <text lang='en'>Home</text>
+    <text lang='fr'>Accueil</text>
+  </item>
+  <item name='about'>
+    <text lang='en'>About</text>
+    <text lang='fr'>A propos</text>
+  </item>
+  <item name='news'>
+    <text lang='en'>News</text>
+    <text lang='fr'>Actualités</text>
+  </item>
+  <item name='features'>
+    <text lang='en'>Features</text>
+    <text lang='fr'>Fonctionnalités</text>
+  </item>
+  <item name='legal'>
+    <text lang='en'>License and credits</text>
+    <text lang='fr'>Licence et remerciements</text>
+  </item>
+  <item name='prj'>
+    <text lang='en'>Download and project</text>
+    <text lang='fr'>Téléchargement et projet</text>
+  </item>
 </menu>
