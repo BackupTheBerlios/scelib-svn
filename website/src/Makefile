@@ -21,6 +21,9 @@ clean:
 install: build
 	$(MAKE) DESTDIR=../$(OUTDIR) publish
 
+tidy_install:
+	$(MAKE) DESTDIR=../$(OUTDIR) tidy_publish
+
 uninstall:
 	for f in $(TARGETS); do \
 	  rm -f ../$(OUTDIR)/$$f ; \
@@ -41,11 +44,22 @@ news.%.html: news.%.xml newsdb.xml shared.xml ../$(PROCDIR)/main.xsl
 publish:
 	-install -d $(DESTDIR)
 	for f in *.html; do \
+	  : ; \
 	  [ $$f -nt $(DESTDIR)/$$f ] && { \
-	    cp $$f $(DESTDIR)/$$f && \
-	    $(TIDY) $(TIDYFLAGS) $$f ; \
-	    [ $$? -ne 0 ] && echo ">> $$f ($$?)" ; \
+	    cp $$f $(DESTDIR)/$$f || break ; \
 	  } ; \
 	  : ; \
 	done
 
+tidy_publish: publish
+	find $(DESTDIR) -name '*.html' -exec $(TIDY) $(TIDYFLAGS) {} \;
+
+#	for f in *.html; do \
+#	  : ; \
+#	  [ $$f -nt $(DESTDIR)/$$f ] && { \
+#	    cp $$f $(DESTDIR)/$$f && \
+#	    $(TIDY) $(TIDYFLAGS) $$f ; \
+#	    [ $$? -ne 0 ] && echo ">> $$f ($$?)" ; \
+#	  } ; \
+#	  : ; \
+#	done
