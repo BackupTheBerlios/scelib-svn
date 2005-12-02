@@ -17,6 +17,6 @@ uninstall:
 	rm -f ../$(OUTDIR)/index.php
 
 publish:
-	install -d $(DESTDIR)
+	-install -d $(DESTDIR)
 	install -m 644 index.php $(DESTDIR)
 	

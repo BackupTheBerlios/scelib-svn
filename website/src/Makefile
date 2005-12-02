@@ -34,7 +34,7 @@ legal.%.html: legal.%.xml authors.xml ../$(PROCDIR)/main.xsl
 	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
 
 publish:
-	install -d $(DESTDIR)
+	-install -d $(DESTDIR)
 	for f in *.html; do \
 	  [ $$f -nt $(DESTDIR)/$$f ] && { \
 	    echo ">> $$f" ; \
