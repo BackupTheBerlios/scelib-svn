@@ -11,9 +11,12 @@ build:
 clean:
 
 install:
-	install -d ../$(OUTDIR)
-	install -m 644 index.php ../$(OUTDIR)
+	$(MAKE) DESTDIR=../$(OUTDIR) publish
 
 uninstall:
 	rm -f ../$(OUTDIR)/index.php
 
+publish:
+	install -d $(DESTDIR)
+	install -m 644 index.php $(DESTDIR)
+	

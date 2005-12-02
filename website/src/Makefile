@@ -17,14 +17,7 @@ clean:
 	-rm -f $(TARGETS)
 
 install: build
-	install -d ../$(OUTDIR)
-	for f in *.html; do \
-	  [ $$f -nt ../$(OUTDIR)/$$f ] && { \
-	    echo ">> $$f" ; \
-	    cp $$f ../$(OUTDIR)/$$f ; \
-	    $(TIDY) $(TIDYFLAGS) $$f ; \
-	  } ; \
-	done
+	$(MAKE) DESTDIR=../$(OUTDIR) publish
 
 uninstall:
 	for f in $(TARGETS); do \
@@ -40,4 +33,13 @@ legal.%.html: legal.%.xml authors.xml ../$(PROCDIR)/main.xsl
 %.html: %.xml menu.xml ../$(PROCDIR)/main.xsl
 	$(XSLTPROC) $(XSLTFLAGS) ../$(PROCDIR)/main.xsl $< > $@ || rm -f $@
 
+publish:
+	install -d $(DESTDIR)
+	for f in *.html; do \
+	  [ $$f -nt $(DESTDIR)/$$f ] && { \
+	    echo ">> $$f" ; \
+	    cp $$f $(DESTDIR)/$$f ; \
+	    $(TIDY) $(TIDYFLAGS) $$f ; \
+	  } ; \
+	done
 
