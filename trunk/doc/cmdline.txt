@@ -1,0 +1,93 @@
+== Command Line functions ==
+
+Almost every command line program needs to parse its supplied arguments. The
+Windows world tends to use one big string, letting programmers implement their
+own parser. In the Unix world, the getopt() API is the reference. None of them
+are easy to use and functional.
+
+the SCElib command line parsing utility tries to give programmers a quick and
+natural way to manage command line options, via a unique function and a user
+defined array.
+
+sceparse_cmdline()
+------------------
+
+int sceparse_cmdline(int argc, char **argv, cmdopt_t *opttab, int optcount);
+
+The function on itself is easy to understand. You pass it the traditionnal
+argc and argv parameters, plus a pointer to a cmdopt_t structure array and
+the number of elements in the array. The trick is of course how to define
+structure items.
+
+cmdopt_t structure
+------------------
+
+This structure contains two parts: the static (predefined) one, in which you
+define options, and the SCElib generated one (in response to the parse), which
+gives the result.
+
+The first part is defined like this:
+
+typedef struct cmdopt {
+
+	int style;		/* short, long or both */
+	int argreq;		/* none, optional or required */
+	int eqstyle;	/* equel sign, no sign, or either */
+	char *opt;		/* option name (should respect CMDOPT_NAMELEN) */
+
+	/* second set, parser filled fields */
+	...
+
+} cmdopt_t;
+
+* style
+
+  this option let you choice between three kind of option specifiers.
+  CMDFLAG_SHORT which corresponds to a single hypen '-', CMDFLAG_LONG for the
+  double hypen '--' or CMDFLAG_BOTH (single or double hypen).
+
+* argreq
+
+  give information on argument requirement for this option. You can specify no
+  argument should be given (CMDARG_NONE), an argument should be given
+  (CMDARG_REQ) or is optional (CMDARG_OPT)
+
+* eqstyle
+
+  when an argument is specified along with an option, there're two traditional
+  ways to declare it: with an equal sign or a space between the option name and
+  the actual argument (a third way is to stick the argument to the option name,
+  but it's rarely used). So you can specify the argument should be separated
+  from the option name by a space (CMDFLAG_NOEQUAL), an equal sign
+  (CMDFLAG_EQUAL), or either of these two forms (CMDFLAG_EITHER)
+
+* opt
+
+  this's the name of the option, less it option specifier prefix (hypen(s)).
+  This name is limited in size to CMDOPT_NAMELEN, because a copy is needed
+  internaly.
+
+The second (generated) part contains three fields :
+
+* optidx
+
+  Is the option was given, this field is the index number (starting from 0)
+  in the argv array of options (strings). Otherwise, it contains CMDERR_NOSPEC
+  to tell the option was not specified.
+
+* error
+
+  If the parser find an error during parsing the option, it fills this field
+  with CMDERR_EQUAL (the option/argument style does not match the programmer's
+  choice), CMDERR_ARG (an argument was expected but not provided, or the
+  opposite), or CMDERR_OK if no error.
+
+* arg
+
+  When an argument is specified along with the option, the content of the
+  argument is available through this pointer (this's not a copy).
+
+Finally, there's another kind of options: those which aren't checked and
+defined in the structure. For them, you can define a special structure item in
+the array, with all its members initialized to 0 or NULL; the parser will
+identify it and place remaining options and arguments in the arg field.
