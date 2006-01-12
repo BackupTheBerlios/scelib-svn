@@ -9,10 +9,10 @@ the SCElib command line parsing utility tries to give programmers a quick and
 natural way to manage command line options, via a unique function and a user
 defined array.
 
-sceparse_cmdline()
-------------------
+cmdline_parse()
+---------------
 
-int sceparse_cmdline(int argc, char **argv, cmdopt_t *opttab, int optcount);
+int cmdline_parse(int argc, char **argv, cmdopt_t *opttab, int optcount);
 
 The function on itself is easy to understand. You pass it the traditionnal
 argc and argv parameters, plus a pointer to a cmdopt_t structure array and

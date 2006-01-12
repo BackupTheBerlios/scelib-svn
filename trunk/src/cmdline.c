@@ -38,9 +38,9 @@ static int cmd_checkoption(cmdopt_t *opttab, int optcount,
 /* Public functions definitions                                              */
 
 /* ------------------------------------------------------------------------- */
-/* sceparse_cmdline()                                                        */
+/* cmdline_parse()                                                           */
 
-int sceparse_cmdline(int argc, char **argv, cmdopt_t *opttab, int optcount) {
+int cmdline_parse(int argc, char **argv, cmdopt_t *opttab, int optcount) {
 
 	int idx, trashopt;
 	int ret = 0;

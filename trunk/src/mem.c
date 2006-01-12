@@ -27,9 +27,9 @@
 /* Public functions                                                          */
 
 /* ------------------------------------------------------------------------- */
-/* scemem_free()                                                             */
+/* mem_free()                                                                */
 
-void scemem_free(void **pmem) {
+void mem_free(void **pmem) {
 
 	if (pmem) {
 		if (*pmem) {
@@ -40,18 +40,18 @@ void scemem_free(void **pmem) {
 	else {
 		errno = EINVAL;
 	}
-	return NULL;
 }
 
 /* ------------------------------------------------------------------------- */
-/* scemem_realloc()                                                          */
+/* mem_realloc()                                                             */
 
-void *scemem_realloc(void **pmem, size_t count) {
+void *mem_realloc(void **pmem, size_t count) {
 
 	void *ptr, *reptr;
 
 	if (!count) {
-		return mem_free(pmem);
+		mem_free(pmem);
+		return NULL;
 	}
 
 	ptr = (pmem) ? *pmem : NULL;

@@ -34,6 +34,8 @@
 #define _end_cdecl
 #endif
 
+#include <stdlib.h>
+
 _begin_cdecl
 
 
@@ -42,39 +44,39 @@ _begin_cdecl
 /* memory functions                                                          */
 
 /* ------------------------------------------------------------------------- */
-/* scemem_init()                                                             */
+/* mem_init()                                                                */
 /* initialize ptr with val only if ptr is a valid pointer */
 
-#define scemem_init(ptr, val) \
+#define mem_init(ptr, val) \
 	if (ptr) { *(ptr) = (val); }
 
 /* ------------------------------------------------------------------------- */
-/* scemem_new()                                                              */
+/* mem_new()                                                                 */
 /* shortcut for memory allocation (with me zeroed) */
 
-#define scemem_new(type, cnt) \
+#define mem_new(type, cnt) \
 	(type *) calloc(sizeof(type), (cnt))
 
 /* ------------------------------------------------------------------------- */
-/* scemem_free()                                                             */
+/* mem_free()                                                                */
 /* free memory like free() do, but also reinit pointer to NULL.              */
 
-void scemem_free(void **pmem);
+void mem_free(void **pmem);
 
 /* ------------------------------------------------------------------------- */
-/* scemem_realloc()                                                          */
+/* mem_realloc()                                                             */
 /* do the same job that the standard realloc() function, but if it fails,    */
 /* automatically free the input buffer pointed by pmem, and initialize the   */
 /* pointer to null. Returns the equivalent of *pmem.                         */
-/* If count == 0, scemem_realloc() acts like scemem_free().                  */
+/* If count == 0, mem_realloc() acts like mem_free().                        */
 
-void *scemem_realloc(void **pmem, size_t count);
+void *mem_realloc(void **pmem, size_t count);
 
 /* ------------------------------------------------------------------------- */
-/* scemem_renew()                                                            */
-/* shortcut to scemem_realloc() with scemem_new() semantics (type spec)      */
+/* mem_renew()                                                               */
+/* shortcut to mem_realloc() with mem_new() semantics (type spec)            */
 
-#define scemem_renew(mem, type, cnt) \
+#define mem_renew(mem, type, cnt) \
 	(type *) mem_realloc((void **)(&(mem)), sizeof(type) * (cnt))
 
 /* ========================================================================= */
@@ -161,11 +163,11 @@ typedef struct cmdopt {
 } cmdopt_t;
 
 /* ------------------------------------------------------------------------- */
-/* sceparse_cmdline()                                                        */
+/* cmdline_parse()                                                           */
 /* Parse the supplied command line arguments and alter the options array as  */
 /* needed.                                                                   */
 
-int sceparse_cmdline(int argc, char **argv, cmdopt_t *opttab, int optcount);
+int cmdline_parse(int argc, char **argv, cmdopt_t *opttab, int optcount);
 
 
 /* ========================================================================= */

@@ -5,20 +5,20 @@ calloc(), realloc() or others. The memory functions provide a simpliest way to
 use dynamic memory. Of course, the developer can use standard memory functions,
 there's no side effect on their use.
 
-1. scemem_init()
-----------------
+1. mem_init()
+-------------
 
-#define scemem_init(ptr, val) \
+#define mem_init(ptr, val) \
     if (ptr) { *(ptr) = (val); }
 
 Initialized the pointed variable *ptr to val only if ptr is not null. With a
 "zero all memory buffers" scheme, this's useful to quickly affect a value
 without doing the test each time.
 
-2. scemem_new()
----------------
+2. mem_new()
+------------
 
-#define scemem_new(type, cnt) \
+#define mem_new(type, cnt) \
     (type *) calloc(sizeof(type), (cnt))
 
 Memory allocation is always done with zero initialization, and auto casted to
@@ -26,13 +26,12 @@ the specified type. This only gives an handy syntax for all allocations. If
 zero initialization if not needed or unwanted, just use the original malloc()
 function.
 
-3. scemem_free()
-----------------
+3. mem_free()
+-------------
 
-void *scemem_free(void **pmem);
+void *mem_free(void **pmem);
 
-Act like the original free(), but with pointer zero'ed. In fact, scemem_free()
-do
+Act like the original free(), but with pointer zero'ed. In fact, mem_free() do
 
 free(*mem);
 *mem = NULL;
@@ -40,18 +39,18 @@ free(*mem);
 if mem is a valid pointer, and always returns NULL (useful to free memory and
 return in the same instruction).
 
-4. scemem_realloc(), scemem_renew()
------------------------------------
+4. mem_realloc(), mem_renew()
+-----------------------------
 
-void *scemem_realloc(void **pmem, size_t count);
-#define scemem_renew(mem, type, cnt) \
+void *mem_realloc(void **pmem, size_t count);
+#define mem_renew(mem, type, cnt) \
     (type *) mem_realloc((void **)(&(mem)), sizeof(type) * (cnt))
 
-The scemem_realloc() function do the same job that realloc(), but if it fails,
+The mem_realloc() function do the same job that realloc(), but if it fails,
 it automatically frees the buffer. Of course, the freeing is done only if pmem
 and *pmem are nor null.
-Another trick is that if count equals zero, scemem_realloc acts like
-scemem_free(), providing a generic way to allocate and deallocate memory
-according to the only count parameter.
+Another trick is that if count equals zero, mem_realloc acts like mem_free(),
+providing a generic way to allocate and deallocate memory according to the only
+count parameter.
 
-The scemem_renew() macro is a shortcut with a syntax similar to scemem_new().
+The mem_renew() macro is a shortcut with a syntax similar to mem_new().
