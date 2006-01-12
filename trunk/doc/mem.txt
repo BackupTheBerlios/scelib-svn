@@ -2,7 +2,8 @@
 
 C programers usually play with dymanic memory functions, like malloc(), free(),
 calloc(), realloc() or others. The memory functions provide a simpliest way to
-use dynamic memory.
+use dynamic memory. Of course, the developer can use standard memory functions,
+there's no side effect on their use.
 
 1. scemem_init()
 ----------------
