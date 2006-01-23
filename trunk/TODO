@@ -1,0 +1,4 @@
+* riri - 23/01/2006
+  in cmdline.c, add the thrash (unknown options/arguments) support (all is 
+  there to support it, but filling must be coded)
+

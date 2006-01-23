@@ -6,7 +6,7 @@ not to replace big ones like glib, but to provide a quick way to create simple
 programs.
 
 Its most important aspects are :
-- Free software, under the GNU Library Public License
+- Free software, under the GNU Library Public License (see the COPYING file)
 - Easy to compile, on any platform, with the minimal compilation tool set, and
   without those autoconf/automake tools which are great for complicated
   projects, but to tricky for little ones, like scelib.
@@ -19,7 +19,7 @@ Its most important aspects are :
 - Portable on any platform, not only unices or only Windows. SCELib only uses
   C standard library fucntions, and when thoses are known not to be right
   implemented or not implemented at all on some platforms, SCELib gives its
-  version, which is often easier to use.
+  version, which is often easier to use (but may have performance penalties).
 
 For build/installation instructions, see the INSTALL file in the same directory
 that this README.

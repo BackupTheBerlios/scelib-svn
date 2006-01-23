@@ -7,7 +7,8 @@ are easy to use and functional.
 
 the SCElib command line parsing utility tries to give programmers a quick and
 natural way to manage command line options, via a unique function and a user
-defined array.
+defined array. This tool just check for command line correctness, letting the
+programmer doing what (s)he want with the actual arguments.
 
 cmdline_parse()
 ---------------
@@ -44,7 +45,10 @@ typedef struct cmdopt {
 
   this option let you choice between three kind of option specifiers.
   CMDFLAG_SHORT which corresponds to a single hypen '-', CMDFLAG_LONG for the
-  double hypen '--' or CMDFLAG_BOTH (single or double hypen).
+  double hypen '--' or CMDFLAG_BOTH (single or double hypen). There's no
+  restriction on single or multiple letters identifiers for options. You can
+  of course define two options (one short and one big) and make the same test
+  on both options to check for one argument.
 
 * argreq
 
@@ -57,7 +61,7 @@ typedef struct cmdopt {
   when an argument is specified along with an option, there're two traditional
   ways to declare it: with an equal sign or a space between the option name and
   the actual argument (a third way is to stick the argument to the option name,
-  but it's rarely used). So you can specify the argument should be separated
+  but it's not so common). So you can specify the argument should be separated
   from the option name by a space (CMDFLAG_NOEQUAL), an equal sign
   (CMDFLAG_EQUAL), or either of these two forms (CMDFLAG_EITHER)
 
@@ -71,7 +75,7 @@ The second (generated) part contains three fields :
 
 * optidx
 
-  Is the option was given, this field is the index number (starting from 0)
+  If the option was given, this field is the index number (starting from 0)
   in the argv array of options (strings). Otherwise, it contains CMDERR_NOSPEC
   to tell the option was not specified.
 
@@ -91,3 +95,4 @@ Finally, there's another kind of options: those which aren't checked and
 defined in the structure. For them, you can define a special structure item in
 the array, with all its members initialized to 0 or NULL; the parser will
 identify it and place remaining options and arguments in the arg field.
+
