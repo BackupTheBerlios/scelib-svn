@@ -23,6 +23,225 @@
 #include "scelib.h"
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
+
+/* ========================================================================= */
+/* Types                                                                     */
+
+typedef struct namelist_tag {	/* list of names */
+	char *name;
+	size_t len;
+	int style;			/* command line style */
+} namelist_;
+
+/* ------------------------------------------------------------------------- */
+/* type option_                                                              */
+typedef struct option_tag {
+
+	namelist_ *namelist;
+	size_t namec;		/* number of names */
+
+	int argreq;			/* argument requirement */
+
+} option_;
+
+/* ------------------------------------------------------------------------- */
+/* type cmdline_t                                                            */
+struct cmdline_ {
+
+	int grow;		/* grow by for reallocation */
+
+	option_ *opts;
+	int count;
+	int size;
+
+	int trashs;		/* size of trashv array */
+	int trashc;		/* number of elements in trash array */
+	char **trashv;	/* array of trashed options/arguments */
+};
+
+/* ========================================================================= */
+/* Static functions declaration                                              */
+
+static int cmd_new_option(cmdline_t cmd);
+static int cmd_add_trash(cmdline_t cmd, char *argv);
+
+/* ========================================================================= */
+/* Public functions definitions                                              */
+
+cmdline_t cmd_create(int size, int grow) {
+	cmdline_t cmd;
+
+	if ((cmd = mem_new(struct cmdline_, 1)) != NULL) {
+		if (size > 0) {
+			cmd->size = size;
+			cmd->opts = mem_new(option_, cmd->size);
+			if (cmd->opts == NULL) {
+				free(cmd);
+				cmd = NULL;
+			}
+			else {
+				cmd->grow = (grow > 0) ? grow : 1;
+			}
+		}
+	}
+	return cmd;
+}
+
+void cmd_destroy(cmdline_t cmd) {
+	if (cmd == NULL) {
+		errno = EINVAL;
+		return;
+	}
+
+	/* if any options allocated */
+	if (cmd->size > 0 && cmd->opts != NULL) {
+		/* if any options defined */
+		if (cmd->count > 0) {
+			int i, j;
+			option_ *opt;
+			/* for each option */
+			for (i = 0; i < cmd->count; ++i) {
+				opt = cmd->opts+i;
+				/* free all names */
+				for (j = 0; j < opt->namec; ++j) {
+					free(opt->namelist[j].name);
+				}
+				free(opt->namelist);
+			}
+			/* free the allocated options */
+			free(cmd->opts);
+		}
+	}
+	free(cmd);
+}
+
+int cmd_option_add(cmdline_t cmd, char *name, int style, int argreq) {
+	int i;
+	option_ *opt;
+
+	if (cmd == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* handle options array allocation */
+	if ((i = cmd_new_option(cmd)) < 0) {
+		return -1;
+	}
+	opt = cmd->opts+i;
+
+	/* handle option names array */
+	if ((opt->namelist = mem_new(namelist_, 1)) == NULL) {
+		return -1;
+	}
+	if ((opt->namelist->name = strdup(name)) == NULL) {
+		int err = errno;
+		free(opt->namelist);
+		opt->namelist = NULL;
+		errno = err;
+		return -1;
+	}
+	opt->namelist->len = strlen(name);
+	opt->namelist->style = style;
+	opt->namec ++;
+	opt->argreq = argreq;
+
+	/* return the index of the new option */
+	return cmd->count ++;
+}
+
+int cmd_option_add_alt(cmdline_t cmd, int idx, char *altname, int style) {
+	option_ *opt;
+	namelist_ *newlist;
+
+	if (cmd == NULL || idx >= cmd->count) {
+		errno = EINVAL;
+		return -1;
+	}
+	opt = cmd->opts+idx;
+
+	if ((newlist = mem_new(namelist_, opt->namec + 1)) == NULL) {
+		return -1;
+	}
+	if ((newlist[opt->namec].name = strdup(altname)) == NULL) {
+		free(newlist);
+		return -1;
+	}
+	newlist[opt->namec].len = strlen(altname);
+	newlist[opt->namec].style = style;
+	memcpy(newlist, opt->namelist, sizeof(namelist_) * opt->namec);
+	free(opt->namelist);
+	opt->namelist = newlist;
+	opt->namec ++;
+	return opt->namec;
+}
+
+int cmd_find(cmdline_t cmd, int idx, char **name, char **arg) {
+	return 0;
+}
+
+int cmd_getnext(cmdline_t cmd, cmdparsed_t *parsed) {
+	return 0;
+}
+
+int cmd_loop(cmdline_t cmd, char **arg) {
+	return 0;
+}
+
+int cmd_reset(cmdline_t cmd) {
+	return 0;
+}
+
+/* ========================================================================= */
+/* Static functions definition                                               */
+
+static int cmd_new_option(cmdline_t cmd) {
+	if (cmd->size == 0) {
+		if ((cmd->opts = mem_new(option_, cmd->grow)) != NULL) {
+			cmd->size = cmd->grow;
+		}
+	}
+	else if (cmd->count == cmd->size) {
+		option_ *opts = mem_new(option_, cmd->size + cmd->grow);
+		if (opts != NULL) {
+			memcpy(opts, cmd->opts, sizeof(option_) * cmd->count);
+			free(cmd->opts);
+			cmd->opts = opts;
+			cmd->size += cmd->grow;
+		}
+	}
+
+	return (cmd->opts == NULL) ? -1 : 0;
+}
+
+static int cmd_add_trash(cmdline_t cmd, char *argv) {
+	if (cmd->trashs == 0) {
+		if ((cmd->trashv = mem_new(char *, cmd->grow)) == NULL) {
+			return -1;
+		}
+		cmd->trashs = cmd->grow;
+	}
+	else if (cmd->trashc == cmd->trashs) {
+		char **args;
+		if ((args = mem_new(char *, cmd->trashs + cmd->grow)) == NULL) {
+			return -1;
+		}
+		memcpy(args, cmd->trashv, sizeof(char *) * cmd->trashc);
+		free(cmd->trashv);
+		cmd->trashv = args;
+	}
+	cmd->trashv[cmd->trashc] = argv;
+	cmd->trashc ++;
+	return 0;
+}
+
+
+
+/* ######################################################################### */
+/* old code                                                                  */
+/* ######################################################################### */
+#if 0
 
 /* ========================================================================= */
 /* Static functions declaration                                              */
@@ -229,3 +448,8 @@ static int cmd_checkoption(cmdopt_t *opttab, int optcount,
 	return ++current;
 
 }
+
+#endif
+
+/* ========================================================================= */
+/* vi:set ts=4 sw=4: */

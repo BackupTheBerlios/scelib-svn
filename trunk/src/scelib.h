@@ -79,8 +79,71 @@ void *mem_realloc(void **pmem, size_t count);
 #define mem_renew(mem, type, cnt) \
 	(type *) mem_realloc((void **)(&(mem)), sizeof(type) * (cnt))
 
+
+
 /* ========================================================================= */
 /* command line functions                                                    */
+
+#define CMDNAME_SHORT		0x01	/* -o */
+#define CMDNAME_LONG		0x02	/* -option */
+#define CMDNAME_BOTH		(CMDNAME_SHORT|CMDNAME_LONG)
+
+#define CMDSEP_SPACE		0x04	/* option argument */
+#define CMDSEP_EQUAL		0x08	/* option=argument */
+#define CMDSEP_BOTH			(CMDSEP_SPACE|CMDSEP_EQUAL)
+
+#define CMDPREFIX_SHORT		0x10	/* - */
+#define CMDPREFIX_LONG		0x20	/* -- */
+#define CMDPREFIX_GNU		(CMDPREFIX_SHORT|CMDPREFIX_LONG)
+#define CMDPREFIX_DOS		0x40	/* / */
+
+/* -o argument */
+#define CMDSTYLE_GNUSHORT	(CMDNAME_SHORT|CMDSEP_SPACE|CMDPREFIX_SHORT)
+/* --option=argument */
+#define CMDSTYLE_GNULONG	(CMDNAME_LONG|CMDSEP_EQUAL|CMDPREFIX_LONG)
+/* /o[ption] argument */
+#define CMDSTYLE_DOS		(CMDNAME_BOTH|CMDSEP_SPACE|CMDPREFIX_DOS)
+/* -o[ption] argument */
+#define CMDSTYLE_JAVA		(CMDSTYLE_GNUSHORT|CMDNAME_LONG)
+
+
+#define CMDARG_NONE			0x01	/* no argument expected */
+#define CMDARG_OPT			0x02	/* optional argument accepted */
+#define CMDARG_REQ			0x04	/* required argument expected */
+
+/* ------------------------------------------------------------------------- */
+/* type cmdline_t                                                            */
+/* Hidden structure to manage the command line options.                      */
+
+typedef struct cmdline_ *cmdline_t;
+
+typedef struct cmdparsed_ {
+	char *name;
+	char *arg;
+} cmdparsed_t;
+
+
+cmdline_t cmd_create(int size, int grow);
+void cmd_destroy(cmdline_t cmd);
+int cmd_option_add(cmdline_t cmd, char *name, int style, int argreq);
+int cmd_option_add_alt(cmdline_t cmd, int idx, char *altname, int style);
+
+/* several possible use of this tools :
+ * 1) check to see if an option has been passed, and then get its argument
+ * 2) loop on each passed option, and get its argument (just style checking)
+ * 3) loop on all defined options, retrieving if it was passed, and if so,
+ *    get its command line position and its argument
+ */
+
+int cmd_find(cmdline_t cmd, int idx, char **name, char **arg);
+int cmd_getnext(cmdline_t cmd, cmdparsed_t *parsed);
+int cmd_loop(cmdline_t cmd, char **arg);
+int cmd_reset(cmdline_t cmd);
+
+/* ######################################################################### */
+/* old code                                                                  */
+/* ######################################################################### */
+#if 0
 
 /*
  * Options can begin with a short specifier '-', a long one '--', or either
@@ -169,6 +232,7 @@ typedef struct cmdopt {
 
 int cmdline_parse(int argc, char **argv, cmdopt_t *opttab, int optcount);
 
+#endif
 
 /* ========================================================================= */
 /* header's footer                                                           */
