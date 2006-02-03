@@ -82,30 +82,37 @@ void *mem_realloc(void **pmem, size_t count);
 
 
 /* ========================================================================= */
-/* command line functions                                                    */
+/* command line utilities                                                    */
 
+/* ------------------------------------------------------------------------- */
+/* style flags                                                               */
+
+/* options naming styles */
 #define CMDNAME_SHORT		0x01	/* -o */
 #define CMDNAME_LONG		0x02	/* -option */
-#define CMDNAME_BOTH		(CMDNAME_SHORT|CMDNAME_LONG)
+#define CMDNAME_MASK		(CMDNAME_SHORT|CMDNAME_LONG)
 
+/* options / arguments separation styles */
 #define CMDSEP_SPACE		0x04	/* option argument */
 #define CMDSEP_EQUAL		0x08	/* option=argument */
-#define CMDSEP_BOTH			(CMDSEP_SPACE|CMDSEP_EQUAL)
+#define CMDSEP_MASK			(CMDSEP_SPACE|CMDSEP_EQUAL)
 
-#define CMDPREFIX_SHORT		0x10	/* - */
-#define CMDPREFIX_LONG		0x20	/* -- */
+/* options prefix styles */
+#define CMDPREFIX_EMPTY		0x10	/* no prefix */
+#define CMDPREFIX_SHORT		0x20	/* - */
+#define CMDPREFIX_LONG		0x40	/* -- */
 #define CMDPREFIX_GNU		(CMDPREFIX_SHORT|CMDPREFIX_LONG)
-#define CMDPREFIX_DOS		0x40	/* / */
+#define CMDPREFIX_DOS		0x80	/* / */
+#define CMDPREFIX_MASK		(CMDPREFIX_EMPTY|CMDPREFIX_SHORT|CMDPREFIX_LONG|CMDPREFIX_DOS)
 
-/* -o argument */
+/* common used styles */
 #define CMDSTYLE_GNUSHORT	(CMDNAME_SHORT|CMDSEP_SPACE|CMDPREFIX_SHORT)
-/* --option=argument */
 #define CMDSTYLE_GNULONG	(CMDNAME_LONG|CMDSEP_EQUAL|CMDPREFIX_LONG)
-/* /o[ption] argument */
-#define CMDSTYLE_DOS		(CMDNAME_BOTH|CMDSEP_SPACE|CMDPREFIX_DOS)
-/* -o[ption] argument */
+#define CMDSTYLE_DOS		(CMDNAME_MASK|CMDSEP_SPACE|CMDPREFIX_DOS)
 #define CMDSTYLE_JAVA		(CMDSTYLE_GNUSHORT|CMDNAME_LONG)
 
+/* ------------------------------------------------------------------------- */
+/* arguments requirement flags                                               */
 
 #define CMDARG_NONE			0x01	/* no argument expected */
 #define CMDARG_OPT			0x02	/* optional argument accepted */
@@ -117,28 +124,104 @@ void *mem_realloc(void **pmem, size_t count);
 
 typedef struct cmdline_ *cmdline_t;
 
+/* ------------------------------------------------------------------------- */
+/* type cmdparsed_t                                                          */
+/* Structure filled by the cmd_find(), cmd_getnext() and cmd_loop()          */
+/* function for arguments retrieval.                                         */
+
 typedef struct cmdparsed_ {
 	char *name;
 	char *arg;
 } cmdparsed_t;
 
-
+/* ------------------------------------------------------------------------- */
+/* cmd_create()                                                              */
+/* Create a new empty command line parser object.                            */
+/* size is the initial size of options array (pre-allocation), and grow is   */
+/* the array growing size in case of reallocation. Passing 0 implies default */
+/* values (0 and 1 respectively).                                            */
 cmdline_t cmd_create(int size, int grow);
+
+/* ------------------------------------------------------------------------- */
+/* cmd_destroy()                                                             */
+/* Free all memory allocated for the cmdline_t object (do not use saved      */
+/* string pointer after the freed !).                                        */
 void cmd_destroy(cmdline_t cmd);
+
+/* ------------------------------------------------------------------------- */
+/* cmd_option_add()                                                          */
+/* Add a option to the cmdline_t object. Give the option name (without       */
+/* prefix), its style (or-ed flags, in which the prefix style is specified)  */
+/* and the argument requirement for this option.                             */
+/* The option id (in fact its position in the options array) is returned if  */
+/* all is ok, -1 is returned otherwise (use errno to get the error).         */
 int cmd_option_add(cmdline_t cmd, char *name, int style, int argreq);
+
+/* ------------------------------------------------------------------------- */
+/* cmd_option_add_alt()                                                      */
+/* Add an alternate name and style for the option determined by its id       */
+/* (returned by a previous call to cmd_option_add()). Returns 0 if ok, -1    */
+/* otherwise (use errno to get the error).                                   */
 int cmd_option_add_alt(cmdline_t cmd, int idx, char *altname, int style);
 
-/* several possible use of this tools :
- * 1) check to see if an option has been passed, and then get its argument
- * 2) loop on each passed option, and get its argument (just style checking)
- * 3) loop on all defined options, retrieving if it was passed, and if so,
- *    get its command line position and its argument
- */
+/* ------------------------------------------------------------------------- */
+/* cmd_dump()                                                                */
+/* Do an stdout output of defined options, useful for debugging.             */
+void cmd_dump(cmdline_t cmd);
 
-int cmd_find(cmdline_t cmd, int idx, char **name, char **arg);
+/* ------------------------------------------------------------------------- */
+/* cmd_parse()                                                               */
+/* Do the actual command line parsing. Defined options are checked, and non  */
+/* defined one are stored in a 'trash' which can be retrieved after. Returns */
+/* 0 if ok, -1 if an internal error occurred, or 1 if the command line did   */
+/* not respect the defined options (sytles).                                 */
+int cmd_parse(cmdline_t cmd, int argc, char **argv);
+
+/* ------------------------------------------------------------------------- */
+/* cmd_find()                                                                */
+/* First kind of usage of the command line utilities: checks is the option   */
+/* determined by its id was passed to the command line and if so, retrieves  */
+/* the option name and argument (if one, NULL otherwise) and returns 0, -1   */
+/* if not (with errno set). Do not free the out string parameters, they're   */
+/* the internal cmdline_t buffers.                                           */
+int cmd_find(cmdline_t cmd, int idx, cmdparsed_t *parsed);
+
+/* ------------------------------------------------------------------------- */
+/* cmd_getnext()                                                             */
+/* Second kind of usage of the command line utilities: loops on each option  */
+/* of the passed command line, checking if the option was previously defined */
+/* in the cmdline_t object (returning 0) or not (returning 1). Note that if  */
+/* the option is not recognized, options styles are not checked (like the    */
+/* prefix) and then the arg field of the cmdparsed_t structure will always   */
+/* be NULL, because the argument presence can't be checked. If an error      */
+/* occurs, -1 is returned (and errno is set accordingly).                    */
+/* Do not free the out string parameters, they're pointers to argv.          */
+/* TODO: add a default style check for non defined options                   */
 int cmd_getnext(cmdline_t cmd, cmdparsed_t *parsed);
-int cmd_loop(cmdline_t cmd, char **arg);
+
+/* ------------------------------------------------------------------------- */
+/* cmd_loop()                                                                */
+/* Third kind of usage of the command line utilities: loops on all defined   */
+/* options, retrieving the actual passed name is so (and returning 0) and    */
+/* argument is present, or returning 1 is this option wasn't passed. Returns */
+/* -1 if any error (use errno to get the error).                             */
+/* Do not free the out string parameters, they're the internal cmdline_t     */
+/* buffers.                                                                  */
+int cmd_loop(cmdline_t cmd, cmdparsed_t *parsed);
+
+/* ------------------------------------------------------------------------- */
+/* cmd_reset()                                                               */
+/* The cmdline_t object uses internal counters to track its state between    */
+/* calls of cmd_parse(), cmd_find() and cmd_loop(). This function reset      */
+/* theses counters (returning 0, or -1 if any error, and use errno to get    */
+/* the error).                                                               */
 int cmd_reset(cmdline_t cmd);
+
+
+
+
+
+
 
 /* ######################################################################### */
 /* old code                                                                  */

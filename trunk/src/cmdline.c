@@ -28,32 +28,41 @@
 /* ========================================================================= */
 /* Types                                                                     */
 
+/* ------------------------------------------------------------------------- */
+/* type namelist_                                                            */
+/* quick helper to store option names (first and alternates) with their size */
+/* and the style to use for each name                                        */
+
 typedef struct namelist_tag {	/* list of names */
-	char *name;
-	size_t len;
+	char *name;			/* the name, dynamically allocated */
+	size_t len;			/* size of name */
 	int style;			/* command line style */
 } namelist_;
 
 /* ------------------------------------------------------------------------- */
 /* type option_                                                              */
+/* defines one option: its name(s), the number of defined names, and the     */
+/* argument requirement                                                      */
+
 typedef struct option_tag {
 
-	namelist_ *namelist;
-	size_t namec;		/* number of names */
+	namelist_ *namelist;	/* list of names, first and alternates */
+	int namec;			/* number of names */
 
-	int argreq;			/* argument requirement */
+	int argreq;				/* argument requirement */
 
 } option_;
 
 /* ------------------------------------------------------------------------- */
 /* type cmdline_t                                                            */
+/* overall structure to manage command line options                          */
 struct cmdline_ {
 
 	int grow;		/* grow by for reallocation */
 
-	option_ *opts;
-	int count;
-	int size;
+	option_ *opts;	/* array of defined options */
+	int count;		/* number of options */
+	int size;		/* size of the array (memory efficiency) */
 
 	int trashs;		/* size of trashv array */
 	int trashc;		/* number of elements in trash array */
@@ -69,6 +78,9 @@ static int cmd_add_trash(cmdline_t cmd, char *argv);
 /* ========================================================================= */
 /* Public functions definitions                                              */
 
+/* ------------------------------------------------------------------------- */
+/* cmd_create()                                                              */
+
 cmdline_t cmd_create(int size, int grow) {
 	cmdline_t cmd;
 
@@ -78,15 +90,16 @@ cmdline_t cmd_create(int size, int grow) {
 			cmd->opts = mem_new(option_, cmd->size);
 			if (cmd->opts == NULL) {
 				free(cmd);
-				cmd = NULL;
-			}
-			else {
-				cmd->grow = (grow > 0) ? grow : 1;
+				return NULL;
 			}
 		}
+		cmd->grow = (grow > 0) ? grow : 1;
 	}
 	return cmd;
 }
+
+/* ------------------------------------------------------------------------- */
+/* cmd_destroy()                                                             */
 
 void cmd_destroy(cmdline_t cmd) {
 	if (cmd == NULL) {
@@ -116,6 +129,9 @@ void cmd_destroy(cmdline_t cmd) {
 	free(cmd);
 }
 
+/* ------------------------------------------------------------------------- */
+/* cmd_option_add()                                                          */
+
 int cmd_option_add(cmdline_t cmd, char *name, int style, int argreq) {
 	int i;
 	option_ *opt;
@@ -129,7 +145,7 @@ int cmd_option_add(cmdline_t cmd, char *name, int style, int argreq) {
 	if ((i = cmd_new_option(cmd)) < 0) {
 		return -1;
 	}
-	opt = cmd->opts+i;
+	opt = cmd->opts + cmd->count;
 
 	/* handle option names array */
 	if ((opt->namelist = mem_new(namelist_, 1)) == NULL) {
@@ -150,6 +166,9 @@ int cmd_option_add(cmdline_t cmd, char *name, int style, int argreq) {
 	/* return the index of the new option */
 	return cmd->count ++;
 }
+
+/* ------------------------------------------------------------------------- */
+/* cmd_option_add_alt()                                                      */
 
 int cmd_option_add_alt(cmdline_t cmd, int idx, char *altname, int style) {
 	option_ *opt;
@@ -177,18 +196,126 @@ int cmd_option_add_alt(cmdline_t cmd, int idx, char *altname, int style) {
 	return opt->namec;
 }
 
-int cmd_find(cmdline_t cmd, int idx, char **name, char **arg) {
+/* ------------------------------------------------------------------------- */
+/* cmd_dump() */
+
+void cmd_dump(cmdline_t cmd) {
+	int o, n;
+	option_ *opt;
+	char *argreq, *nstyle, *sstyle;
+	char pstyle[25];
+	int prefix;
+
+	if (cmd == NULL) {
+		errno = EINVAL;
+		return;
+	}
+
+	printf("### cmdline dump ###\n"
+		"Grow size: %d\n"
+		"Options array:\n"
+		"  size: %d\n"
+		"  count: %d\n"
+		"Trash array\n"
+		"  size: %d\n"
+		"  count: %d\n",
+		cmd->grow,
+		cmd->size, cmd->count,
+		cmd->trashs, cmd->trashc);
+
+	printf("Options:\n");
+	for (o = 0; o < cmd->count; ++o) {
+		opt = cmd->opts + o;
+		switch (opt->argreq) {
+			case CMDARG_NONE:
+				argreq = "none";
+				break;
+			case CMDARG_OPT:
+				argreq = "optional";
+				break;
+			case CMDARG_REQ:
+				argreq = "required";
+				break;
+		}
+		printf("* #%d\n"
+			"  Argument requirement: %s\n"
+			"  Number of option names: %d\n"
+			"  Names:\n",
+			o, argreq, opt->namec);
+		for (n = 0; n < opt->namec; ++n) {
+			switch (opt->namelist[n].style & CMDNAME_MASK) {
+				case CMDNAME_SHORT:
+					nstyle = "short";
+					break;
+				case CMDNAME_LONG:
+					nstyle = "long";
+					break;
+				default:
+					nstyle = "short or long";
+			}
+			switch (opt->namelist[n].style & CMDSEP_MASK) {
+				case CMDSEP_SPACE:
+					sstyle = "space";
+					break;
+				case CMDSEP_EQUAL:
+					sstyle = "equal sign";
+					break;
+				default:
+					sstyle = "space or equal sign";
+			}
+			/*"none, '-', '--', '/',"*/
+			strset(pstyle, 0);
+			prefix = opt->namelist[n].style & CMDPREFIX_MASK;
+			if (prefix & CMDPREFIX_EMPTY) strcpy(pstyle, "none");
+			if (prefix & CMDPREFIX_SHORT) {
+				if (strlen(pstyle)) strcat(pstyle, ", ");
+				strcat(pstyle, "'-'");
+			}
+			if (prefix & CMDPREFIX_LONG) {
+				if (strlen(pstyle)) strcat(pstyle, ", ");
+				strcat(pstyle, "'--'");
+			}
+			if (prefix & CMDPREFIX_DOS) {
+				if (strlen(pstyle)) strcat(pstyle, ", ");
+				strcat(pstyle, "'/'");
+			}
+			printf("  - %s\n"
+				"    length: %d\n"
+				"    name style: %s\n"
+				"    prefix style: %s\n"
+				"    separator style: %s\n",
+				opt->namelist[n].name, opt->namelist[n].len,
+				nstyle, pstyle, sstyle);
+		}
+	}
+}
+
+/* ------------------------------------------------------------------------- */
+/* cmd_parse()                                                               */
+int cmd_parse(cmdline_t cmd, int argc, char **argv) {
 	return 0;
 }
 
+/* ------------------------------------------------------------------------- */
+/* cmd_find()                                                                */
+int cmd_find(cmdline_t cmd, int idx, cmdparsed_t *parsed) {
+	return 0;
+}
+
+/* ------------------------------------------------------------------------- */
+/* cmd_getnext()                                                             */
 int cmd_getnext(cmdline_t cmd, cmdparsed_t *parsed) {
 	return 0;
 }
 
-int cmd_loop(cmdline_t cmd, char **arg) {
+/* ------------------------------------------------------------------------- */
+/* cmd_loop()                                                                */
+int cmd_loop(cmdline_t cmd, cmdparsed_t *parsed) {
 	return 0;
 }
 
+/* ------------------------------------------------------------------------- */
+/* cmd_reset()                                                               */
 int cmd_reset(cmdline_t cmd) {
 	return 0;
 }
@@ -196,6 +323,9 @@ int cmd_reset(cmdline_t cmd) {
 /* ========================================================================= */
 /* Static functions definition                                               */
 
+/* ------------------------------------------------------------------------- */
+/* cmd_new_option()                                                          */
+/* allocate space in options array if necessary                              */
 static int cmd_new_option(cmdline_t cmd) {
 	if (cmd->size == 0) {
 		if ((cmd->opts = mem_new(option_, cmd->grow)) != NULL) {
@@ -215,6 +345,9 @@ static int cmd_new_option(cmdline_t cmd) {
 	return (cmd->opts == NULL) ? -1 : 0;
 }
 
+/* ------------------------------------------------------------------------- */
+/* cmd_create()                                                              */
+/* add the specified argument to the trashed options array                   */
 static int cmd_add_trash(cmdline_t cmd, char *argv) {
 	if (cmd->trashs == 0) {
 		if ((cmd->trashv = mem_new(char *, cmd->grow)) == NULL) {
@@ -235,6 +368,40 @@ static int cmd_add_trash(cmdline_t cmd, char *argv) {
 	cmd->trashc ++;
 	return 0;
 }
+
+#ifdef TEST_CMDLINE
+
+int main(int argc, char **argv) {
+	cmdline_t cmd;
+	int idx;
+
+	if ((cmd = cmd_create(0, 0)) == NULL) {
+		perror("cmd_create");
+		exit(1);
+	}
+	if ((idx = cmd_option_add(cmd, "h", CMDSTYLE_GNUSHORT, CMDARG_NONE)) < 0) {
+		perror("cmd_option_add(h)");
+		exit(1);
+	}
+	if (cmd_option_add_alt(cmd, idx, "help", CMDSTYLE_GNULONG) < 0) {
+		perror("cmd_option_add_alt(help)");
+		exit(1);
+	}
+	if ((idx = cmd_option_add(cmd, "v", CMDSTYLE_GNUSHORT, CMDARG_NONE)) < 0) {
+		perror("cmd_option_add(v)");
+		exit(1);
+	}
+	if (cmd_option_add_alt(cmd, idx, "verbose", CMDSTYLE_GNULONG) < 0) {
+		perror("cmd_option_add_alt(verbose");
+		exit(1);
+	}
+
+	cmd_destroy(cmd);
+
+	return 0;
+}
+
+#endif
 
 
 

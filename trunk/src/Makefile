@@ -39,6 +39,10 @@ all:: lib$(LIBNAME).a
 clean::
 	$(RM) $(OBJS) lib$(LIBNAME).a
 
+test_cmdline: cmdline.c
+	$(CC) $(CFLAGS) -DTEST_CMDLINE -o cmdline.o cmdline.c
+	$(LD) $(LDFLAGS) -o test_cmdline.exe cmdline.o
+
 lib$(LIBNAME).a: $(OBJS)
 	$(RM) $@
 	$(AR) $@ $(OBJS)
