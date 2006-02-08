@@ -20,15 +20,6 @@
  *
  */
 
-/* TODO:
- * - add support for the empty option (""), resulting during parsing in
- *   next argument retrieve
- * - if NULL description, do not print the option. To print it without descr,
- *   pass an empty string ("")
- * - see to remove support on CMDSTYLE_NONE with an argument (option and
- *   argument stucked)
- */
-
 #include "scelib.h"
 #include <string.h>
 #include <errno.h>
@@ -176,7 +167,7 @@ int cmd_addopt_arg(cmdline_t cmd, char *name, int style, int argreq,
 
 	cmdopt_t *newopt;
 
-	if (cmd == NULL) {
+	if (cmd == NULL || (style != CMDSTYLE_NONE && argreq == CMDARG_NONE)) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -215,6 +206,12 @@ int cmd_addopt_name(cmdline_t cmd, int idx, char *altname, int altstyle) {
 	while (idx--) {
 		opt = opt->next;
 	}
+
+	if (opt->head->len == 0) {
+		errno = EINVAL;
+		return -1;
+	}
+
 	return cmd_opt_newname(opt, altname, altstyle);
 
 }
@@ -246,7 +243,7 @@ void cmd_print(FILE *fd, cmdline_t cmd, char *head, char *tail) {
 		}
 
 		name = opt->head;
-		while (name) {
+		while (name && name->len > 0) {
 			if (opt->argreq == CMDARG_NONE) {
 				fprintf(fd, "%s\n", name->name);
 			}
@@ -255,9 +252,6 @@ void cmd_print(FILE *fd, cmdline_t cmd, char *head, char *tail) {
 				char *format = NULL;
 
 				switch (name->style) {
-					case CMDSTYLE_NONE:
-						format = "%s'%s'\n";
-						break;
 					case CMDSTYLE_SPACE:
 						format = "%s '%s'\n";
 						break;
@@ -268,7 +262,12 @@ void cmd_print(FILE *fd, cmdline_t cmd, char *head, char *tail) {
 			}
 			name = name->next;
 		}
-		fprintf(fd, "\t%s\n", opt->descr);
+		if (opt->head->len == 0) {
+			fprintf(fd, "%s\n", opt->descr);
+		}
+		else {
+			fprintf(fd, "\t%s\n", opt->descr);
+		}
 		opt = opt->next;
 	}
 
@@ -277,6 +276,8 @@ void cmd_print(FILE *fd, cmdline_t cmd, char *head, char *tail) {
 	}
 
 }
+
+
 
 /* ========================================================================= */
 /* Static functions definition                                               */
