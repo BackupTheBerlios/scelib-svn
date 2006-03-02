@@ -54,3 +54,25 @@ providing a generic way to allocate and deallocate memory according to the only
 count parameter.
 
 The mem_renew() macro is a shortcut with a syntax similar to mem_new().
+
+5. mem_dup(), mem_dupt()
+------------------------
+
+void *mem_dup(void *mem, size_t size);
+#define mem_dupt(type, mem, cnt) \
+	(type *) mem_dup((void *) (mem), sizeof(type) * (cnt))
+
+Acts like strdup(), but with memory. In fact, this's a shortcut to a malloc()
+plus a memcpy() combined.
+The memdupt() version makes cast implicit bt the use of the source type.
+
+6. mem_zero()
+-------------
+
+#define mem_zero(mem, size) \
+(plateform dependent)
+#define mem_zerot(type, mem, cnt) \
+	(type *) mem_zero(mem, sizeof(type) * (cnt))
+
+Initializes a memory area with zeroes, and returns the result. The mem_zerot()
+make an automatic cast.

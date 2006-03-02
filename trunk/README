@@ -6,7 +6,7 @@ not to replace big ones like glib, but to provide a quick way to create simple
 programs.
 
 Its most important aspects are :
-- Free software, under the GNU Library Public License (see the COPYING file)
+- Free software, under the GNU Lesser Public License (see the COPYING file)
 - Easy to compile, on any platform, with the minimal compilation tool set, and
   without those autoconf/automake tools which are great for complicated
   projects, but to tricky for little ones, like scelib.
