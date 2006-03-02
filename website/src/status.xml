@@ -36,6 +36,38 @@
 
   <item>
     <title>
+      <text lang="fr">Mémoire</text>
+      <text lang="en">Memory</text>
+    </title>
+    <state>100%</state>
+    <comment>
+      <text lang="fr">
+        Utilisable, documentation complète dans <tt>doc/mem.txt</tt>.
+      </text>
+      <text lang="en">
+        Usable, documentation complete in <tt>doc/mem.txt</tt>.
+      </text>
+    </comment>
+  </item>
+
+  <item>
+    <title>
+      <text lang="fr">Ligne de commande</text>
+      <text lang="en">Command line</text>
+    </title>
+    <state>100%</state>
+    <comment>
+      <text lang="fr">
+        Utilisable, documentation complète dans <tt>doc/cmdline.txt</tt>.
+      </text>
+      <text lang="en">
+        Usable, documentation complete in <tt>doc/cmdline.txt</tt>.
+      </text>
+    </comment>
+  </item>
+
+  <item>
+    <title>
       <text lang="fr">Chaînes</text>
       <text lang="en">Strings</text>
     </title>
@@ -46,6 +78,5 @@
     </comment>
   </item>
 
-  <!-- ... -->
-
 </status>
+
