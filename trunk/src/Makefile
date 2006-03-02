@@ -24,6 +24,12 @@
 LIBNAME = scelib
 OBJS = mem.o cmdline.o
 
+# should be detected !
+LIBEXT = a
+SHEXT = so
+#LIBEXT = lib
+#SHEXT = dll
+
 # -------------------------------------------------------------------------
 # options and tools
 
@@ -34,10 +40,14 @@ RM = rm -f
 # -------------------------------------------------------------------------
 # main targets
 
-all:: lib$(LIBNAME).a
+all:: static
+
+static: lib$(LIBNAME).$(LIBEXT)
+
+shared: lib$(LIBNAME).$(SHEXT)
 
 clean::
-	$(RM) $(OBJS) lib$(LIBNAME).a
+	$(RM) -f $(OBJS) lib$(LIBNAME).$(LIBEXT) lib$(LIBNAME).$(SHEXT)
 
 test_cmdline: cmdline.c
 	$(CC) $(CFLAGS) -DTEST_CMDLINE -o cmdline.o cmdline.c
