@@ -1,0 +1,36 @@
+== String functions ==
+
+Like memory functions, string functions are designed to help the programer in
+the hard task to manipulate strings without memory checking. Many fucntions are
+like the standard library ones, but with automatic allocation. Some others
+provide recurring functionnalities.
+Some of the following functions use a unique other one to do formatted
+initialization : vaprint(). You can find more informations on its
+implementation in the vaprint.notes file in this directory.
+
+1. str_dup()
+------------
+
+char *str_dup(const char *str);
+
+Copy str in a new allocated buffer, as the not standard (but often implemented)
+strdup() does.
+
+2. str_set(), set_vset()
+------------------------
+
+char *str_set(char **dest, size_t *dlen, const char *fmt, ...);
+char *str_vset(char **dest, size_t *dlen, const char *fmt, va_list ap);
+
+str_set() is a generalized function to format a string like printf() does, and
+return a new allocated string for the result. Like standard library functions,
+the result can be used in the return statment and in output of the function,
+with the difference that the result is allocated, so the output parameter is
+a pointer to a string (char *) instead of a memory area.
+If dest is null, the parameter is not used (and the result is just returned);
+if dlen is null, the size of the resulting string is not returned.
+NULL is returned if any error, check errno.
+
+str_vset() does the same job, but takes a computed argument pointer (va_list)
+instead of variable length of arguments.
+

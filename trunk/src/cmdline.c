@@ -33,8 +33,8 @@
 /* Quick helper to store option names (first and alternates) with their size */
 /* and the style for argument separation.                                    */
 
-typedef struct cmdname_ cmdname_t;
-struct cmdname_ {
+typedef struct cmdname cmdname_t;
+struct cmdname {
 
 	char *name;			/* option name */
 	int len;			/* length of name */
@@ -49,8 +49,8 @@ struct cmdname_ {
 /* Defines one option: its name(s), the argument requirement flag, the       */
 /* description and argument text for help.                                   */
 
-typedef struct cmdopt_ cmdopt_t;
-struct cmdopt_ {
+typedef struct cmdopt cmdopt_t;
+struct cmdopt {
 
 	cmdname_t *nhead;	/* head of linked list of names */
 	cmdname_t *ntail;	/* tail of linked list of names */
@@ -69,7 +69,7 @@ struct cmdopt_ {
 /* type cmdline_t                                                            */
 /* Overall structure to manage command line options.                         */
 
-struct cmdline_ {
+struct cmdline {
 
 	cmdopt_t *ohead;	/* head of linked list of options */
 	cmdopt_t *otail;	/* tail of linked list of options */
@@ -90,8 +90,8 @@ struct cmdline_ {
 #define AN_OPTION	1
 #define AN_ARGUMENT	2
 
-typedef struct cmddata_ cmddata_t;
-struct cmddata_ {
+typedef struct cmddata cmddata_t;
+struct cmddata {
 
 	int what;			/* option or argument ? */
 	int argpos;			/* argc position */
@@ -147,7 +147,7 @@ static void cmd_new_data(cmddata_t **list, cmddata_t **cur);
 
 cmdline_t cmd_create(cmdparse_cb cb) {
 
-	cmdline_t cmd = mem_new(struct cmdline_, 1);
+	cmdline_t cmd = mem_new(struct cmdline, 1);
 	if (cmd)
 		cmd->cb = cb;
 	return cmd;

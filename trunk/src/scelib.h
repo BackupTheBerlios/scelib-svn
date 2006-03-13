@@ -38,6 +38,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <errno.h>
 
 _begin_cdecl
@@ -93,7 +94,7 @@ void *mem_dup(void *mem, size_t size);
 /* ========================================================================= */
 /* command line utilities                                                    */
 
-typedef enum argsep_ {
+typedef enum argsep {
 
 	ARGSEP_NONE = 0,	/* special value for options without argument  */
 	ARGSEP_SPACE,		/* separate argument from option with a space */
@@ -101,7 +102,7 @@ typedef enum argsep_ {
 
 } e_argsep;
 
-typedef enum argreq_ {
+typedef enum argreq {
 
 	ARG_NONE = 0,		/* no argument expected */
 	ARG_OPTIONAL,		/* optional argument accepted */
@@ -109,10 +110,10 @@ typedef enum argreq_ {
 
 } e_argreq;
 
-typedef struct cmdline_ *cmdline_t;
+typedef struct cmdline *cmdline_t;
 
-typedef struct cmdparsed_ cmdparsed_t;
-struct cmdparsed_ {
+typedef struct cmdparsed cmdparsed_t;
+struct cmdparsed {
 
 	/* option values */
 	char *name;			/* actual option name */
@@ -145,6 +146,14 @@ int cmd_parse(cmdline_t cmd, int argc, char **argv, void *userdata);
 
 /* ========================================================================= */
 /* string functions                                                          */
+
+char *str_dup(const char *str);
+char *str_set(char **dest, size_t *dlen, const char *fmt, ...);
+char *str_vset(char **dest, size_t *dlen, const char *fmt, va_list ap);
+char *str_grow(char **str, size_t add);
+char *str_expand(char **str, size_t pos, size_t count);
+char *str_contract(char **str, size_t pos, size_t count);
+char *str_adjust(char **str, size_t pos, size_t count, size_t length);
 
 
 

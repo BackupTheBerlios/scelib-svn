@@ -1,4 +1,15 @@
-* riri - 23/01/2006
-  in cmdline.c, add the thrash (unknown options/arguments) support (all is 
-  there to support it, but filling must be coded)
+Command Line:
 
+Memory:
+
+Strings:
+* riri 02/03/2006: all !
+
+MultiThreading:
+* riri 02/03/2006: all !
+
+Network:
+* riri 02/03/2006: all !
+
+Other:
+* riri 02/03/2006: any ideas on new features welcome ;-)

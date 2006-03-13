@@ -1,0 +1,42 @@
+== vaprint() implementation notes ==
+
+The vaprint() is a generalized string formatting function, which acts like the
+(normaly) C99 standard vasprintf(), but with different arguments and returned
+value, to follow the argument passing scheme of the other scelib functions.
+
+1. Why another printf() like function ?
+---------------------------------------
+
+First of all, there's no multi-platform printf() function. Each implementor
+wants to make its own modifications to the output (the most modfidied domain is
+the floating point output), argument specifiers, acceptable values, etc... If a
+multi-platform C library is born, it's not to have problems on string or output
+formating.
+
+The second reason is that scelib provides auto-allocated string functions, and
+we can't be sure of what is provided, nor own it's provided. The simpliest way
+to ensure a formating function with dynamic buffer allocation is available in
+a portable manner is to implement it.
+
+Finally, it's a good exercise for the author ;-).
+
+2. Own do we use it ?
+---------------------
+
+Here's the vaprint prototype:
+
+char *vaprint(char **dest, size_t *dlen, const char *fmt, va_list ap);
+
+The returned value is the auto-allocated zero terminated string. It's to the
+caller to free it (with free() or one of the scelib memory functions). The
+fmt and ap parameters are obvious, they correspond to the traditional printf()
+parameters.
+The first parameter, dest, is a pointer to the allocated string. It can be used
+to keep a reference of this string if the returned value is used as another
+function parameter; if it equals to NULL, it's not used.
+the second parameter permits to get the length of the resulting string. This
+parameter is optional too, passing NULL meaning 'not used'.
+
+3. What are the allowed formats ?
+---------------------------------
+
