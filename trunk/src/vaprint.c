@@ -5,8 +5,8 @@
  *  * Copyright (C) 1999-2004 raf <raf@raf.org>
  *  * , uClibc:
  *  * Copyright (C) 2002, 2003 Manuel Novoa III
- *	* and snprintf function in tarball from:
- *	* Copyright 1999, Mark Martinec <mark.martinec@ijs.si>. All rights reserved.
+ *  * and snprintf function in tarball from:
+ *  * Copyright 1999, Mark Martinec <mark.martinec@ijs.si>. All rights reserved.
  *
  *  vaprint.c - own implementation of vasprintf() functions.
  *  See implementation notes that should have been provided with this file.
@@ -31,7 +31,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
-#include <math.h>
+/*#include <math.h>*/
+/*#include <float.h>*/
 
 
 
@@ -55,6 +56,7 @@
 #define MAX_INT_PART		99 + 1
 #define MAX_FRAC_PART		99 + 1
 
+#define mymax(a, b)			(((a) > (b)) ? (a) : (b))
 
 
 /* ========================================================================= */
@@ -558,7 +560,8 @@ static int analyze_format(fmtctx_t *pctx, va_list ap) {
 				spec->arg.d = (unsigned long) va_arg(ap, unsigned long);
 			}
 			else if (spec->len == lenChar) {
-				spec->arg.d = (unsigned char) va_arg(ap, unsigned char);
+				/*spec->arg.d = (unsigned char) va_arg(ap, unsigned char);*/
+				spec->arg.d = (unsigned char) va_arg(ap, unsigned int);
 			}
 			else if (spec->len == lenShort) {
 				spec->arg.d = (unsigned short) va_arg(ap, unsigned int);
@@ -784,25 +787,35 @@ static double integral(double real, double *fp) {
 
 static double roundto(double val, int precision, int decimal) {
 
+	double ip, fp, rounded;
+	int digits, flag;
+
+	flag = (val < 0) ? 1 : 0;	/* if the number is negative */
+	ip = integral(val, &fp);
+	digits = ((decimal) ? precision : precision - 1 - log_10(ip));
+
+	rounded = floor(fp * pow_10(digits + 1)) / 10;
+	rounded = ((rounded + 0.5 < ceil(rounded)) ? floor(rounded) : ceil(rounded));
+	fp = rounded * pow_10(-digits);
+	rounded = ip + fp;
+	return ((flag && rounded) ? -rounded : rounded);
+
+}
+/*
+static double roundto(double val, int precision, int decimal) {
+
 	double ip, fp;
 	int digits;
 	double rounded;
-/*	double conv;*/
 
 	ip = integral(val, &fp);
 	digits = ((decimal) ? precision : precision - 1 - log_10(ip));
-/*	conv = (fp * pow_10(digits)) + ((val < 0) ? -0.5 : 0.5);*/
-/*	conv = (fp * pow_10(digits)) + 0.5;*/
-/*	rounded = (double) (int) conv;*/
-/*	rounded = (val < 0) ? ceil(conv) : floor(conv);*/
 	rounded = (val < 0) ? ceil(fp * pow_10(digits)) : floor(fp * pow_10(digits));
-/*	rounded = (double)((int)(((val < 0) ? -0.5 : 0.5) + conv));*/
 	fp = rounded * pow_10(-digits);
-/*	fp = (((double)((int)(((val < 0) ? -0.5 : 0.5) + (fp * pow_10(digits)))))
-		* pow_10(-digits));*/
 	return (ip + fp);
 
 }
+*/
 
 /* ------------------------------------------------------------------------- */
 /* num2str()                                                                 */
@@ -954,7 +967,7 @@ static size_t fmt_integer(fmtspec_t *spec, char **out) {
 	len += spadlen + zpadlen + baselen;
 
 	if (spec->flags & FLAG_ZERO) {
-		zpadlen = max(zpadlen, spadlen);
+		zpadlen = mymax(zpadlen, spadlen);
 		spadlen = 0;
 	}
 
@@ -1072,7 +1085,7 @@ static size_t fmt_floating(fmtspec_t *spec, char **out) {
 
 	len += spadlen + zpadlen;
 	if (spec->flags & FLAG_ZERO) {
-		zpadlen = max(zpadlen, spadlen);
+		zpadlen = mymax(zpadlen, spadlen);
 		spadlen = 0;
 	}
 	if (spec->flags & FLAG_JUSTIFY) {
@@ -1359,3 +1372,32 @@ static size_t fmt_string(fmtspec_t *spec, char **out) {
 	return len;
 
 }
+
+
+#ifdef TEST_VAPRINT
+#include <stdio.h>
+
+void my_print(char *fmt, ...) {
+	va_list ap;
+	char *str;
+
+	va_start(ap, fmt);
+	str = vaprint(NULL, NULL, fmt, ap);
+	va_end(ap);
+	free(str);
+}
+
+int main(int argc, char **argv) {
+
+	char *str1;
+	char fmt[] = "%3.2f";
+	double val = 0.43651758471045f;
+	my_print(fmt, val);
+	printf(fmt, val);
+	free(str1);
+	return 0;
+
+}
+#endif
+
+/* vi:set ts=4 sw=4: */

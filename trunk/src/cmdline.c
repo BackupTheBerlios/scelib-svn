@@ -450,7 +450,7 @@ int cmd_parse(cmdline_t cmd, int argc, char **argv, void *userdata) {
 /* ------------------------------------------------------------------------- */
 /* cmd_opt_new()                                                             */
 
-static cmdopt_t *cmd_opt_new(char *name, e_argreq argreq, int argsep, char *descr, char *argdescr, cmdparse_cb cb) {
+static cmdopt_t *cmd_opt_new(char *name, e_argreq argreq, e_argsep argsep, char *descr, char *argdescr, cmdparse_cb cb) {
 
 	cmdopt_t *newopt;
 
@@ -477,7 +477,7 @@ static cmdopt_t *cmd_opt_new(char *name, e_argreq argreq, int argsep, char *desc
 /* ------------------------------------------------------------------------- */
 /* cmd_opt_newname()                                                         */
 
-static int cmd_opt_newname(cmdopt_t *opt, char *altname, int altsep) {
+static int cmd_opt_newname(cmdopt_t *opt, char *altname, e_argsep altsep) {
 
 	cmdname_t *newname;
 	int esaved;

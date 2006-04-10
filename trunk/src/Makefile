@@ -22,7 +22,7 @@
 .POSIX:
 
 LIBNAME = scelib
-OBJS = mem.o cmdline.o
+OBJS = mem.o cmdline.o vaprint.o str.o
 
 # should be detected !
 LIBEXT = a
@@ -52,6 +52,10 @@ clean::
 test_cmdline: cmdline.c
 	$(CC) $(CFLAGS) -DTEST_CMDLINE -o cmdline.o cmdline.c
 	$(LD) $(LDFLAGS) -o test_cmdline.exe cmdline.o
+
+test_vaprint: vaprint.c
+	$(CC) $(CFLAGS) -DTEST_VAPRINT -o vaprint.o vaprint.c
+	$(LD) $(LDFLAGS) -o test_vaprint vaprint.o -lm
 
 lib$(LIBNAME).a: $(OBJS)
 	$(RM) $@
