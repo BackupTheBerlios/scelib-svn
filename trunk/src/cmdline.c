@@ -85,14 +85,14 @@ static int cmdline_isoption(cmdline_t cl, char *arg)
 			}
 			else
 			{
-				if ((FLAG(cl, CMDF_SPACESHORT) && len == 1) ||
-					(FLAG(cl, CMDF_SPACELONG) && len > 1))
+				if ((FLAG(cl, CMDF_SPACESHORT) && len == 1) || len > 1)
 					return 1;
 			}
 		}
 	}
 	else if (arg[0] == '/')
 	{
+		--len;
 		if ((FLAG(cl, CMDF_SLASHSHORT) && len == 1) ||
 			(FLAG(cl, CMDF_SLASHLONG) && len > 1))
 		{
@@ -129,7 +129,7 @@ static cmdopt_t *cmdline_checkdefined(cmdline_t cl, cmdparsed_t *current)
 	while (opt)
 	{
 		if ((len == 1 && opt->sname == current->opt_name[0]) ||
-			(len > 1 && !strcmp(opt->lname, current->opt_name)))
+			(len > 1 && opt->lname && !strcmp(opt->lname, current->opt_name)))
 		{
 			return opt;
 		}
@@ -224,7 +224,7 @@ int cmdline_parse(cmdline_t cl, int argc, char **argv, void* userdata)
 				continue;
 			}
 			cmdline_fillarg(&got, argv[argi]);
-			if (FLAG(cl, CMDF_ONLYDEFS) &&
+			if (!FLAG(cl, CMDF_ONLYDEFS) &&
 				(ret = cl->cb(cl, &got, userdata)) != 0)
 				break;
 			continue;
@@ -234,7 +234,7 @@ int cmdline_parse(cmdline_t cl, int argc, char **argv, void* userdata)
 		if (!strcmp(argv[argi], "-"))
 		{
 			cmdline_fillarg(&got, argv[argi]);
-			if (FLAG(cl, CMDF_ONLYDEFS) &&
+			if (!FLAG(cl, CMDF_ONLYDEFS) &&
 				(ret = cl->cb(cl, &got, userdata)) != 0)
 				break;
 			continue;
@@ -282,9 +282,9 @@ int cmdline_parse(cmdline_t cl, int argc, char **argv, void* userdata)
 			}
 			else
 			{
+				got.optid = -1;
 				if (FLAG(cl, CMDF_ONLYDEFS))
 					continue;
-				got.optid = -1;
 			}
 		}
 		if (!cb)
@@ -324,7 +324,7 @@ int cmdline_addopt_if(cmdline_t cl, char sname, char *lname,
 {
 	if (pred)
 		return cmdline_addopt(cl, sname, lname, callback);
-	return -1;
+	return 0;
 }
 
 /* ------------------------------------------------------------------------- */

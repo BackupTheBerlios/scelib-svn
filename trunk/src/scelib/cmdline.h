@@ -43,7 +43,7 @@ SCELIB_BEGIN_CDECL
 #define CMDF_ONLYDEFS	0x1000	/* callback only defined options */
 
 /* -s, -s arg, --long, --long=arg, -- */
-#define CMDF_GNUSTYLE	CMDF_DASHSHORT|CMDF_DDASHLONG|CMDF_EQUALLONG|CMDF_SPACELONG
+#define CMDF_GNUSTYLE	CMDF_DASHSHORT|CMDF_DDASHLONG|CMDF_SPACESHORT|CMDF_EQUALLONG
 /* /s, /s arg, /long, /long arg */
 #define CMDF_WINSTYLE	CMDF_SLASHSHORT|CMDF_SLASHLONG|CMDF_SPACESHORT|CMDF_SPACELONG
 /* -s, -s=arg, -long, -long=arg */
