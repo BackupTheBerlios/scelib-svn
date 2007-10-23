@@ -1,8 +1,7 @@
-/*
- *  scelib - Simpliest C Extension Library
- *  Copyright (C) 2005-2006 Richard 'riri' GILL <richard@houbathecat.info>
+/*	scelib - Simple C Extension Library
+ *  Copyright (C) 2005-2007 Richard 'riri' GILL <richard@houbathecat.info>
  *
- *  str.c - string functions.
+ *  str.c - string handling functions.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,11 +16,12 @@
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
 
-#include "scelib.h"
+#include "scelib/str.h"
+#include "scelib/memory.h"
 #include <string.h>
+#include <errno.h>
 
 /* ------------------------------------------------------------------------- */
 /* vaprint()                                                                 */
@@ -128,3 +128,5 @@ char *str_adjust(char **str, size_t pos, size_t count, size_t length) {
 	return str_contract(str, pos + length, count - length);
 
 }
+
+/* vi:set ts=4 sw=4: */

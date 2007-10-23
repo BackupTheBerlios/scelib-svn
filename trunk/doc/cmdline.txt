@@ -16,24 +16,86 @@ not), the parser will call your callback function.
 1. Managing the command line object
 ===================================
 
-cmd_create()
-------------
+cmdline_t cmdline_create()
+--------------------------
 
-cmdline_t cmd_create(cmdparse_cb cb);
+cmdline_t cmdline_create(int flags, cmdline_cb_t callback);
 
 Creates a command line object and return it. The callback parameter is a
-default one, when no defined option was found. You can pass NULL as callback
-parameter to ignore non defined options (see more about callbacks in options
-definition below).
+default one, when no defined option was found or no specific callback function
+has been declared for a defined option. You can pass NULL as callback
+parameter to avoid being called in another way than for a specific option
+(see more about callbacks in options definition below).
 
-cmd_destroy()
--------------
+The flags control the command line object behaviour:
+CMDF_ENDMARK	Indicates that the -- will be treated as an 'end of options'
+				marker. Subsequent command line parameters will all be reported
+				as simple arguments, even if they conform to the option style.
 
-void cmd_destroy(cmdline_t cmd);
+CMDF_DASHSHORT	The '-x' (a dash and one letter or digit) is reported as an
+				option.
+
+CMDF_DASHLONG	The '-long' (a dash and several letters and/or digits) is
+				reported as an option.
+
+CMDF_DDASHLONG	The '--long' (a double dash and several letters and/or digits)
+				is reported as an option.
+
+CMDF_SLASHSHORT	The '/x' (a slash and one letter or digit) is reported as an
+				option.
+
+CMDF_SLASHLONG	The '/long' (a slash and several letters and/or digits) is
+				reported as an option.
+
+CMDF_EQUALSHORT	'<option>=arg' (argument separated from the option by an equal
+				sign) is reported as an option for short (one letter or digit)
+				options.
+
+CMDF_EQUALLONG	'<option>=arg' (argument separated from the option by an equal
+				sign) is reported as an option for long (several letters and/or
+				digits) options.
+
+CMDF_SPACESHORT '<option> arg' (argument separated from the option by a space)
+				is reported as an option for short (one letter or digit)
+				options.
+
+CMDF_SPACELONG	'<option> arg' (argument separated from the option by a space)
+				is reported as an option for long (several letters and/or
+				digits) options.
+
+CMDF_ONLYDEFS	Report only defined options as such ones. Non defined options
+				are reported as simple arguments.
+
+CMDF_GNUSTYLE	Shortcut for standard GNU (and for the most part *nix) syntax:
+				-x
+				-x arg
+				--long
+				--long=arg
+
+CMDF_WINSTYLE	Shortcut for standard Windows syntax:
+				/x
+				/x arg
+				/long
+				/long arg
+
+CMDF_JAVASTYLE	Shortcut for syntax used in Java (and many other) programs:
+				-x
+				-x arg
+				-long
+				-long arg
+
+CMDF_STDSTYLE	Dependant on the platform. Will be CMDF_GNUSTYLE on *nix and
+				CMDF_WINSTYLE on Windows.
+
+cmdline_destroy()
+-----------------
+
+int cmdline_destroy(cmdline_t cmd);
 
 Destroys a previously allocated cmdline_t object, freeing all internal datas
 too. Call it after parsing if you don't need any reference to the command line
 object.
+Returns 0 if all is ok, -1 otherwise (see errno).
 
 2. Parsing the command line
 ===========================
@@ -43,84 +105,67 @@ The parser
 
 Its scheme is quiet simple. It navigate through the actual arguments passed on
 the command line, and check for each if an option was defined. If it's not the
-case and a default callback function was specified (with cmd_create()), it'll
-call it. If a defined option is detected, it'll check its correctness and will
-try to detect its argument too if one has been defined for it. It will then
-call the option specific callback like for non defined options. You can use a
-specific callback for each option, use a generic one, or a shared one for some
-options, at your choice, you can completly manage the way you handle options.
-In this callback, you've to return a value: 0 to indicate to stop the parsing
-(for example if you detected an error) or a non zero value to continue. The
+case and a default callback function was specified (with cmdline_create()),
+it'll call it. If a defined option is detected, it'll call the option specific
+callback like for non defined options. You can use a specific callback for each
+option, use a generic one, or a shared one for some options, at your choice,
+you can completly manage the way you handle options.
+In this callback, you've to return a value: 0 to indicate to continue the
+parsing (for example if you detected an error) or a non zero value to stop. The
 parser will return the last called callback return value. As the parser returns
 -1 in case of internal error, you should avoid using this value in callback
 returns (use instead a positive value).
 
-The cmdparse_cb type
---------------------
+The cmdline_cb_t function pointer
+---------------------------------
+
+typedef int (*cmdline_cb_t)(cmdline_t cl, cmdparsed_t *parsed, void *userdata);
 
 typedef int (*cmdparse_cb)(cmdline_t cmd, cmdparsed_t *parsed, void *userdata);
 
-You callback(s) must have this prorotype. For each call, you'll have access to
+Your callback(s) must have this prorotype. For each call, you'll have access to
 the command line object (to retrieve option information for example), a simple
 cmdparsed_t structure pointer, in which you'll find all revelant information
 about the actual argument, and a pointer to user data you've previously passed
 to the parser function (this's a quick way to keep state information, you can
 use it to store you're detected options for example, without the need of
-global variables - global variables are bad).
+global variables - global variables are devil).
 
 The cmdparsed_t type
 --------------------
 
-typedef struct cmdparsed_ cmdparsed_t;
-struct cmdparsed_ {
+typedef struct cmdparsed_type cmdparsed_t;
+struct cmdparsed_type
+{
+	int opt_pos;	/* position on command line */
+	char *opt_name;	/* option name, without prefix */
+	char *opt_arg;	/* argument, if specified, NULL otherwise */
 
-	/* option values */
-	char *name;			/* actual option name */
-	char *arg;			/* argument if given, NULL otherwise */
-
-	/* generic info */
-	int argpos;			/* argc value of this element */
-
-	/* defined option related */
-	int error;			/* CMDERR_* error codes if something went wrong */
-	int optid;			/* option id if matched, -1 otherwise */
-	int nameid;			/* name id if matched, -1 otherwise */
-
+	int optid;		/* reference to option id, -1 if not a defined one */
 };
 
 For each call of your callback function, a new cmdparsed_t object will be given
 as option information. In this structure, you'll find generic options fields:
-* 'name' is the option name (of course)
-* 'arg' is the detected argument attached to the option, if found (NULL
-  otherwise)
-* 'argpos' is the option position on command line (index of argv[x])
+* 'opt_pos' is the option position on command line (index of argv)
+* 'opt_name' is the actual option name (of course), without the leading prefix
+  (one or two dashes, or a slash). It's NULL if the command line parameter is
+  not an option (argument alone).
+* 'opt_arg' is the detected argument attached to the option, if found (NULL
+  otherwise).
 
 You can detect if the call is for defined options or not, by checking the
-'optid' field.
-* 'optid' is the index to the defined option in the cmdline_t object, or -1 if
-  the parser didn't detect one for this command line argument
-* 'nameid' is the index to the option name in the defined option. An option can
-  have several names, see more below
-* 'error' is assign to zero if all is ok, or any combinaison of the parse error
-  constants explained below;
+'optid' field. 'optid' is the index to the defined option in the cmdline_t
+object, or -1 if the parser didn't detect one for this command line argument.
 
-When the parser looks for defined options and find one, it checks its style and
-if the passed option style doesn't match the defined one, initialize the error
-field. As the parser doesn't stop on errors, the errors can accumulates, and
-the error value is added:
-* CMDERR_REQ is an argument requirement error. This occurs if the option has a
-  required argument and none was passed, or if it can't get an argument and one
-  was passed.
-* CMDERR_SEP is an argument separation style error. This occurs if the option
-  needs an argument separated to the option with a space and an equal sign was
-  passed, or the contrary.
+When the parser looks for options and find one, it checks its style and report
+it really as an option if the style is correct, or as a simple argument if not.
 
 Parsing
 -------
 
 Use the simple function
 
-int cmd_parse(cmdline_t cmd, int argc, char **argv, void *userdata);
+int cmdline_parse(cmdline_t cl, int argc, char **argv, void* userdata);
 
 You pass it your cmdline_t object, the argc/arcv pair, and optionaly a user
 data that will be transmitted to your callbacks. It returns -1 if and error
@@ -136,85 +181,55 @@ which great simplifies the interface.
 Defining options isn't mandatory (this utility can be used just as a quick
 command line callback scheme), but you'll miss all its interest.
 
-cmd_addopt()
-------------
-int cmd_addopt(cmdline_t cmd, char *name, char *descr, cmdparse_cb cb);
-
-Defines a new option with the name 'name'; note that you've to pass not only
-the 'pure' name, but also its prefix (aka '-' or '--' or '/' for Windows),
-which isn't thus necessary. If you want to use the usage utility (see below),
-you can add a description of the option, pass NULL otherwise. Finally, you
-*must* pass a callback function as describe above. This function is just a
-shortcut for options without argument. The return value is the option index
-in the array of options (the one used to initialize the 'optid' field of the
-cmdparsed_t structure).
-
-cmd_addopt_arg()
+cmdline_addopt()
 ----------------
 
-int cmd_addopt_arg(cmdline_t cmd, char *name, e_argreq argreq, e_argsep argsep, char *descr, char *argdescr, cmdparse_cb cb);
+int cmdline_addopt(cmdline_t cl, char sname, char *lname,
+				   cmdline_cb_t callback);
 
-Defines an option which may take an argument. The name has the same meaning
-than for cmd_addopt(). The 'argreq' field indicates the requirement of the
-argument:
+Defines a new option with the short (one character) name 'sname', or 0 if you
+don't want this option to have a short name; the long name 'lname', or NULL if
+you don't want this option to have a long name. Finally, you can pass a callback
+function as describe above. The return value is the option index in the array of
+options (the one used to initialize the 'optid' field of the cmdparsed_t
+structure).
 
-typedef enum argreq_ {
+cmdline_addopt_if()
+-------------------
 
-	ARG_NONE = 0,		/* no argument expected */
-	ARG_OPTIONAL,		/* optional argument accepted */
-	ARG_REQUIRED		/* argument is required along the option */
+int cmdline_addopt_if(cmdline_t cl, char sname, char *lname,
+					  cmdline_cb_t callback, int pred);
 
-} e_argreq;
-
-Passing ARG_NONE to this function is an error (use cmd_addopt() instead). Other
-values are obvious. the 'argsep' field indicates the argument separation style:
-
-typedef enum argsep_ {
-
-	ARGSEP_NONE = 0,	/* special value for options without argument  */
-	ARGSEP_SPACE,		/* separate argument from option with a space */
-	ARGSEP_EQUAL		/* separate argument from option with a '=' sign */
-
-} e_argsep;
-
-As for 'argreq', don't use ARGSEP_NONE, which is a special value for options
-without argument. Other values are obvious.
-The 'descr' field has the same meaning than for cmd_addopt(). The 'argdescr'
-is optional and is used to display a 'generic' value for the argument is the
-usage function (see below). Use 'cb' as for cmd_addopt().
-
-cmd_addopt_name()
------------------
-
-int cmd_addopt_name(cmdline_t cmd, int optid, char *altname, e_argsep altsep);
-
-This function permits to define several names to one option. To work on the
-right option, you pass the cmdline_t object plus the option index previously
-returned by cmd_addopt() or cmd_addopt_arg() functions. Then specify the
-alternate name with 'altname', and the argument separation style for this name.
-
-The return value is the name index in the name array for the option. This index
-is used to initialize the 'nameid' field of the cmdparsed_t structure in
-callbacks.
+Defines an option like cmdline_addopt(), but only if the predicate 'pred'
+evaluates to a value different than zero.
 
 4. Other utility functions
 ==========================
 
-cmd_getopt()
-------------
+cmdline_getopt()
+----------------
 
-int cmd_getopt(cmdline_t cmd, int optid, int nameid, char **name, e_argreq *argreq, e_argsep *argsep, char **descr, char **argdescr);
+int cmdline_getopt(cmdline_t cl, int optid, char *sname, char **lname);
 
 This function returns the information of the option pointed by the cmdline_t
-object, the option index (optid) and the name index in the option (namedid).
-All previously option parameters are returns in next function arguments. Will
-return 0 if all is Ok or -1 when an error occurred (essentialy EINVAL for bad
-option referencing).
+object and the option index (optid). Will return 0 if all is Ok or -1 when an
+error occurred (essentialy EINVAL for bad option referencing).
+Don't use buffers or free returned buffers. The returned pointers point to
+allocated memory locations. For example:
 
-cmd_print()
------------
+char sname;
+char *lname;
+cmdline_getopt(cl, 0, &sname, &lname);
+/* do anything */
+cmdline_getopt(cl, 1, &sname, &lname);
+/* ... */
 
-void cmd_print(FILE *fd, cmdline_t cmd, char *head, char *tail);
+cmdline_print()
+---------------
+
+**NOT IMPLEMENTED YET**
+
+void cmdline_print(FILE *fd, cmdline_t cl, char *head, char *tail);
 
 This function is a cool utility which implements for you a 'usage' help. It
 will enumerate all defined options (in their creation order), with the

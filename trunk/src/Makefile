@@ -1,6 +1,6 @@
 # Unix Makefile for SCELib
-# scelib - Simpliest C Extension Library
-# Copyright (C) 2005-2006 Richard 'riri' GILL <richard@houbathecat.info>
+# scelib - Simple C Extension Library
+# Copyright (C) 2005-2007 Richard 'riri' GILL <richard@houbathecat.info>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 .POSIX:
 
 LIBNAME = scelib
-OBJS = mem.o cmdline.o vaprint.o str.o
+OBJS = memory.o cmdline.o vaprint.o str.o thread.o
 
 # should be detected !
 LIBEXT = a
@@ -49,15 +49,9 @@ shared: lib$(LIBNAME).$(SHEXT)
 clean::
 	$(RM) -f $(OBJS) lib$(LIBNAME).$(LIBEXT) lib$(LIBNAME).$(SHEXT)
 
-test_cmdline: cmdline.c
-	$(CC) $(CFLAGS) -DTEST_CMDLINE -o cmdline.o cmdline.c
-	$(LD) $(LDFLAGS) -o test_cmdline.exe cmdline.o
-
-test_vaprint: vaprint.c
-	$(CC) $(CFLAGS) -DTEST_VAPRINT -o vaprint.o vaprint.c
-	$(LD) $(LDFLAGS) -o test_vaprint vaprint.o -lm
-
 lib$(LIBNAME).a: $(OBJS)
 	$(RM) $@
 	$(AR) $@ $(OBJS)
 	ranlib $@
+
+# vi:set ts=4 sw=4 noet:

@@ -34,3 +34,5 @@ NULL is returned if any error, check errno.
 str_vset() does the same job, but takes a computed argument pointer (va_list)
 instead of variable length of arguments.
 
+**NOT FINISHED**
+

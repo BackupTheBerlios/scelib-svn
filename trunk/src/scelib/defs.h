@@ -1,7 +1,7 @@
 /*	scelib - Simple C Extension Library
  *  Copyright (C) 2005-2007 Richard 'riri' GILL <richard@houbathecat.info>
  *
- *  scelib.h - dispatch header file.
+ *  defs.h - global definitions header.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,15 +18,26 @@
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __SCELIB_H
-#define __SCELIB_H
+#ifndef __SCELIB_DEFS_H
+#define __SCELIB_DEFS_H
 
-#include "scelib/defs.h"
-#include "scelib/platform.h"
-#include "scelib/cmdline.h"
-#include "scelib/thread.h"
-#include "scelib/memory.h"
-#include "scelib/str.h"
+#ifdef __cplusplus
+#define SCELIB_BEGIN_CDECL extern "C" {
+#define SCELIB_END_CDECL }
+#else
+#define SCELIB_BEGIN_CDECL
+#define SCELIB_END_CDECL
+#endif
 
-#endif /* __SCELIB_H */
+/* ------------------------------------------------------------------------- */
+/* Sets errno to the specified error number, and returns given return code.  */
+#define RETERROR(error, ret) \
+	(errno = (error), (ret))
+
+/* ------------------------------------------------------------------------- */
+/* Saves the errno before any manipulation.                                  */
+#define SAFEERRNO(code) \
+	{ int err = errno; code; errno = err; }
+
+#endif /* __SCELIB_DEFS_H */
 /* vi:set ts=4 sw=4: */

@@ -1,8 +1,7 @@
-/*
- *  scelib - Simpliest C Extension Library
- *  Copyright (C) 2005-2006 Richard 'riri' GILL <richard@houbathecat.info>
+/*	scelib - Simple C Extension Library
+ *  Copyright (C) 2005-2007 Richard 'riri' GILL <richard@houbathecat.info>
  *
- *  cmdline.c - cool command line parser.
+ *  cmdline.c - command line handling functions.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,570 +16,335 @@
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
 
-#include "scelib.h"
+#include "scelib/cmdline.h"
+#include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
+#define FLAG(c, f)	(c->flags & (f))
 
+typedef struct cmdopt_type cmdopt_t;
 
-/* ========================================================================= */
-/* Types                                                                     */
+struct cmdline_type
+{
+	int flags;
+	cmdline_cb_t cb;
 
-/* ------------------------------------------------------------------------- */
-/* type cmdname_t                                                            */
-/* Quick helper to store option names (first and alternates) with their size */
-/* and the style for argument separation.                                    */
+	cmdopt_t *opthead;
+	int optcount;
+};
 
-typedef struct cmdname cmdname_t;
-struct cmdname {
+struct cmdopt_type
+{
+	int id;
+	char sname;
+	char *lname;
+	cmdline_cb_t cb;
 
-	char *name;			/* option name */
-	int len;			/* length of name */
-	e_argsep argsep;	/* argument separator style */
-
-	cmdname_t *next;	/* for linked list */
-
+	cmdopt_t *next;
 };
 
 /* ------------------------------------------------------------------------- */
-/* type cmdopt_t                                                             */
-/* Defines one option: its name(s), the argument requirement flag, the       */
-/* description and argument text for help.                                   */
-
-typedef struct cmdopt cmdopt_t;
-struct cmdopt {
-
-	cmdname_t *nhead;	/* head of linked list of names */
-	cmdname_t *ntail;	/* tail of linked list of names */
-	int ncount;			/* number of names */
-	cmdparse_cb cb;		/* callback */
-
-	int argreq;			/* argument requirement flag */
-	char *descr;		/* option description (for help) */
-	char *argdescr;		/* argument description (for help) */
-
-	cmdopt_t *next;		/* for linked list */
-
-};
-
-/* ------------------------------------------------------------------------- */
-/* type cmdline_t                                                            */
-/* Overall structure to manage command line options.                         */
-
-struct cmdline {
-
-	cmdopt_t *ohead;	/* head of linked list of options */
-	cmdopt_t *otail;	/* tail of linked list of options */
-	int ocount;			/* number of options */
-
-	cmdparse_cb cb;		/* default callback */
-
-};
-
-/* ------------------------------------------------------------------------- */
-/* type cmddata_t                                                            */
-/* Handles temporary extracted command line information.                     */
-/* The 'what' field defines if it's an option or an extracted argument (with */
-/* the check of '='. 'argpos' reference the argv position.                   */
-/* The 'data' is freed after usage if it's an option, but left as is in case */
-/* of argument, because it's just a pointer to argv[x] after the '='.        */
-
-#define AN_OPTION	1
-#define AN_ARGUMENT	2
-
-typedef struct cmddata cmddata_t;
-struct cmddata {
-
-	int what;			/* option or argument ? */
-	int argpos;			/* argc position */
-	char *data;			/* actual data (option name or argument */
-	cmddata_t *next;	/* next in list */
-	cmddata_t *prev;	/* previous in list */
-
-};
-
-
-
-/* ========================================================================= */
-/* Static functions declaration                                              */
-
-/* ------------------------------------------------------------------------- */
-/* cmd_opt_new()                                                             */
-/* Creates a new cmdopt_ structure.                                          */
-
-static cmdopt_t *cmd_opt_new(char *name, e_argreq argreq, e_argsep argsep, char *descr, char *argdescr, cmdparse_cb cb);
-
-/* ------------------------------------------------------------------------- */
-/* cmd_opt_newname()                                                         */
-/* Adds an alternate name to the specified option.                           */
-
-static int cmd_opt_newname(cmdopt_t *opt, char *altname, e_argsep altsep);
-
-/* ------------------------------------------------------------------------- */
-/* cmd_opt_del()                                                             */
-/* Frees the specified option, with all allocated memory during option life. */
-
-static void cmd_opt_del(cmdopt_t *opt);
-
-/* ------------------------------------------------------------------------- */
-/* cmd_found_opt()                                                           */
-/* Looks for an option which has the specified name.                         */
-
-static int cmd_found_opt(cmdline_t cmd, char *name, cmdopt_t **popt, cmdname_t **pname, int *poid, int *pnid);
-
-/* ------------------------------------------------------------------------- */
-/* cmd_new_data()                                                            */
-/* Allocates a new cmddata_t in the list, and update the current item to     */
-/* this new one.                                                             */
-
-static void cmd_new_data(cmddata_t **list, cmddata_t **cur);
-
-
-
-/* ========================================================================= */
-/* Public functions definitions                                              */
-
-/* ------------------------------------------------------------------------- */
-/* cmd_create()                                                              */
-
-cmdline_t cmd_create(cmdparse_cb cb) {
-
-	cmdline_t cmd = mem_new(struct cmdline, 1);
-	if (cmd)
-		cmd->cb = cb;
-	return cmd;
-
+static void cmdline_fillarg(cmdparsed_t *arg, char *argval)
+{
+	arg->opt_name = NULL;
+	arg->opt_arg = argval;
 }
 
 /* ------------------------------------------------------------------------- */
-/* cmd_destroy()                                                             */
+static int cmdline_isoption(cmdline_t cl, char *arg)
+{
+	int len = (int) strlen(arg);
+	char *ptr = strchr(arg, '=');
+	if (ptr)
+		len = (int) (ptr - arg);
 
-void cmd_destroy(cmdline_t cmd) {
-
-	cmdopt_t *opt, *next;
-
-	if (!cmd)
-		return;
-
-	/* free option list */
-	opt = cmd->ohead;
-	while (opt) {
-		next = opt->next;
-		cmd_opt_del(opt);
-		opt = next;
+	if (arg[0] == '-')
+	{
+		--len;
+		if (arg[1] == '-')
+		{
+			--len;
+			if (FLAG(cl, CMDF_DDASHLONG) && len > 1)
+			{
+				if ((ptr && FLAG(cl, CMDF_EQUALLONG)) ||
+					(!ptr && FLAG(cl, CMDF_SPACELONG)))
+					return 2;
+			}
+		}
+		else if ((FLAG(cl, CMDF_DASHSHORT) && len == 1) ||
+			(FLAG(cl, CMDF_DASHLONG) && len > 1))
+		{
+			if (ptr)
+			{
+				if ((FLAG(cl, CMDF_EQUALSHORT) && len == 1) ||
+					(FLAG(cl, CMDF_EQUALLONG) && len > 1))
+					return 1;
+			}
+			else
+			{
+				if ((FLAG(cl, CMDF_SPACESHORT) && len == 1) ||
+					(FLAG(cl, CMDF_SPACELONG) && len > 1))
+					return 1;
+			}
+		}
 	}
-	free(cmd);
-
-}
-
-/* ------------------------------------------------------------------------- */
-/* cmd_addopt()                                                              */
-
-int cmd_addopt(cmdline_t cmd, char *name, char *descr, cmdparse_cb cb) {
-
-	return cmd_addopt_arg(cmd, name, ARG_NONE, ARGSEP_NONE, descr, NULL, cb);
-
-}
-
-/* ------------------------------------------------------------------------- */
-/* cmd_addopt_arg()                                                          */
-
-int cmd_addopt_arg(cmdline_t cmd, char *name, e_argreq argreq, e_argsep argsep, char *descr, char *argdescr, cmdparse_cb cb) {
-
-	cmdopt_t *newopt;
-
-	if (!cmd || (argsep != ARGSEP_NONE && argreq == ARG_NONE) || !name || !cb)
-		return reterror(EINVAL, -1);
-
-	newopt = cmd_opt_new(name, argreq, argsep, descr, argdescr, cb);
-	if (!newopt)
-		return -1;
-
-	if (cmd->ohead) {
-		cmd->otail->next = newopt;
-		cmd->otail = newopt;
+	else if (arg[0] == '/')
+	{
+		if ((FLAG(cl, CMDF_SLASHSHORT) && len == 1) ||
+			(FLAG(cl, CMDF_SLASHLONG) && len > 1))
+		{
+			if (ptr)
+			{
+				if ((FLAG(cl, CMDF_EQUALSHORT) && len == 1) ||
+					(FLAG(cl, CMDF_EQUALLONG) && len > 1))
+					return 1;
+			}
+			else
+			{
+				if ((FLAG(cl, CMDF_SPACESHORT) && len == 1) ||
+					(FLAG(cl, CMDF_SPACELONG) && len > 1))
+					return 1;
+			}
+		}
 	}
-	else {
-		cmd->ohead = newopt;
-		cmd->otail = newopt;
-	}
-
-	return cmd->ocount ++;
-
-}
-
-/* ------------------------------------------------------------------------- */
-/* cmd_addopt_name()                                                         */
-
-int cmd_addopt_name(cmdline_t cmd, int optid, char *altname, e_argsep altsep) {
-
-	cmdopt_t *opt;
-
-	if (!cmd || optid >= cmd->ocount || !altname || !strlen(altname))
-		return reterror(EINVAL, -1);
-
-	opt = cmd->ohead;
-	while (optid --)
-		opt = opt->next;
-
-	if (!opt->nhead->len ||
-		(altsep == ARGSEP_NONE && opt->argreq != ARG_NONE) ||
-		(altsep != ARGSEP_NONE && opt->argreq == ARG_NONE))
-		return reterror(EINVAL, -1);
-
-	return cmd_opt_newname(opt, altname, altsep);
-
-}
-
-/* ------------------------------------------------------------------------- */
-/* cmd_getopt()                                                              */
-
-int cmd_getopt(cmdline_t cmd, int optid, int nameid, char **name, e_argreq *argreq, e_argsep *argsep, char **descr, char **argdescr) {
-
-	cmdopt_t *popt;
-	cmdname_t *pname;
-
-	if (!cmd || optid >= cmd->ocount)
-		return reterror(EINVAL, -1);
-
-	popt = cmd->ohead;
-	while (optid --)
-		popt = popt->next;
-
-	if (popt->ncount < nameid)
-		return reterror(EINVAL, -1);
-
-	pname = popt->nhead;
-	while (nameid --)
-		pname = pname->next;
-
-	*name = pname->name;
-	*argreq = popt->argreq;
-	*argsep = pname->argsep;
-	*descr = popt->descr;
-	*argdescr = popt->argdescr;
-
 	return 0;
-
 }
 
 /* ------------------------------------------------------------------------- */
-/* cmd_print()                                                               */
+static int cmdline_isendmark(cmdline_t cl, char *arg)
+{
+	return (!strcmp(arg, "--") && FLAG(cl, CMDF_ENDMARK) ? 1 : 0);
+}
 
-void cmd_print(FILE *fd, cmdline_t cmd, char *head, char *tail) {
+/* ------------------------------------------------------------------------- */
+static cmdopt_t *cmdline_checkdefined(cmdline_t cl, cmdparsed_t *current)
+{
+	cmdopt_t *opt;
+	int len = (int) strlen(current->opt_name);
 
-	static char defargd[] = "value";
-
-	if (head) {
-		fprintf(fd, "%s\n", head);
+	opt = cl->opthead;
+	while (opt)
+	{
+		if ((len == 1 && opt->sname == current->opt_name[0]) ||
+			(len > 1 && !strcmp(opt->lname, current->opt_name)))
+		{
+			return opt;
+		}
+		opt = opt->next;
 	}
+	return NULL;
+}
 
-	if (cmd && cmd->ocount > 0) {
-		cmdname_t *pname;
-		cmdopt_t *popt = cmd->ohead;
-		char *adesc, format;
+/* ------------------------------------------------------------------------- */
+cmdline_t cmdline_create(int flags, cmdline_cb_t callback)
+{
+	cmdline_t cl;
 
-		while (popt) {
-			if (!popt->descr) {
-				popt = popt->next;
+	if (callback == NULL)
+		return RETERROR(EINVAL, NULL);
+
+	if ((cl = (cmdline_t) malloc(sizeof(struct cmdline_type))) == NULL)
+		return NULL;
+
+	cl->flags = flags;
+	cl->cb = callback;
+	cl->opthead = NULL;
+	cl->optcount = 0;
+
+	return cl;
+}
+
+/* ------------------------------------------------------------------------- */
+int cmdline_destroy(cmdline_t cl)
+{
+	cmdopt_t *ptr, *next;
+
+	if (cl == NULL)
+		return RETERROR(EINVAL, -1);
+
+	ptr = cl->opthead;
+	while (ptr)
+	{
+		next = ptr->next;
+		free(ptr);
+		ptr = next;
+	}
+	free(cl);
+	return 0;
+}
+
+/* ------------------------------------------------------------------------- */
+int cmdline_parse(cmdline_t cl, int argc, char **argv, void* userdata)
+{
+	int argi, cur, start, optlen;
+	int ret = 0;		/* return from callback */
+	int endopt = 0;		/* indicates end of options */
+	cmdparsed_t got;	/* current parsed option */
+	cmdopt_t *opt;		/* reference to defined option */
+	cmdline_cb_t cb;	/* global or option callback */
+
+	if (cl == NULL)
+		return RETERROR(EINVAL, -1);
+
+	/* if no argument, just return */
+	if (argc == 1)
+		return 0;
+
+	/* for each argument passed (non options are skipped) */
+	got.opt_name = NULL;
+	for (argi = 1, cur = argi; argi < argc; ++argi, cur = argi)
+	{
+		/* set the argument position */
+		got.opt_pos = argi;
+		if (got.opt_name)
+		{
+			free(got.opt_name);
+			got.opt_name = NULL;
+		}
+		cb = NULL;
+
+		if (endopt)
+		{
+			/* don't bother with options, just fill a simple argument */
+			cmdline_fillarg(&got, argv[argi]);
+			if ((ret = cl->cb(cl, &got, userdata)) != 0)
+				break;
+			continue;
+		}
+
+		/* -- alone, mark the end of options */
+		if (!strcmp(argv[argi], "--"))
+		{
+			if (FLAG(cl, CMDF_ENDMARK))
+			{
+				endopt = 1;
 				continue;
 			}
+			cmdline_fillarg(&got, argv[argi]);
+			if (FLAG(cl, CMDF_ONLYDEFS) &&
+				(ret = cl->cb(cl, &got, userdata)) != 0)
+				break;
+			continue;
+		}
 
-			pname = popt->nhead;
-			while (pname) {
-				if (popt->argreq == ARG_NONE) {
-					fprintf(fd, "%s\n", pname->name);
-				}
-				else {
-					adesc = (popt->argdescr) ? popt->argdescr : defargd;
-					if (pname->argsep == ARGSEP_SPACE)
-						format = ' ';
-					else
-						format = '=';
-					fprintf(fd, "%s%c%s\n", pname->name, format, adesc);
-				}
-				pname = pname->next;
+		/* - alone, not really an option */
+		if (!strcmp(argv[argi], "-"))
+		{
+			cmdline_fillarg(&got, argv[argi]);
+			if (FLAG(cl, CMDF_ONLYDEFS) &&
+				(ret = cl->cb(cl, &got, userdata)) != 0)
+				break;
+			continue;
+		}
+
+		/* check if argument with correct style */
+		start = cmdline_isoption(cl, argv[argi]);
+		if (start > 0)
+		{
+			got.opt_arg = strchr(argv[argi], '=');
+			if (got.opt_arg)
+			{
+				got.opt_arg = ++got.opt_arg;
+				optlen = (int) (got.opt_arg - argv[argi]) - 1 - start;
 			}
-			if (popt->nhead->len == 0)
-				fprintf(fd, "%s\n", popt->descr);
 			else
-				fprintf(fd, "\t%s\n", popt->descr);
-			popt = popt->next;
-		}
-	}
-
-	if (tail) {
-		fprintf(fd, "%s\n", tail);
-	}
-
-}
-
-/* ------------------------------------------------------------------------- */
-/* cmd_parse()                                                               */
-
-int cmd_parse(cmdline_t cmd, int argc, char **argv, void *userdata) {
-	int i, len, oid, nid;
-	cmdopt_t *popt, *ptemp;
-	cmdname_t *pname;
-	cmdparse_cb cb;
-	cmdparsed_t parsed;
-	char *ptr;
-	int ret = 0;
-	cmddata_t *list = 0;
-	cmddata_t *cur = 0;
-
-	/* first generate a list of extracted command line arguments unchecked */
-	for (i = 1; i < argc; ++i) {
-		/* create a new data container  */
-		cmd_new_data(&list, &cur);
-
-		/* check if we have the form option=argument */
-		ptr = strchr(argv[i], '=');
-		if (ptr) {
-			/* create another container for the argument */
-			cmd_new_data(&list, &cur);
-
-			/* store the argument */
-			cur->data = ptr + 1;
-			cur->what = AN_ARGUMENT;
-
-			/* store the option */
-			len = (int) (ptr - argv[i]);
-			cur->prev->data = mem_new(char, len + 1);
-			strncpy(cur->prev->data, argv[i], len);
-			cur->prev->data[len] = '\0';
-			cur->prev->what = AN_OPTION;
-			cur->prev->argpos = i;
-		}
-		else {
-			/* store the option */
-			cur->data = strdup(argv[i]);
-			cur->what = AN_OPTION;
-			cur->argpos = i;
-		}
-	}
-
-	/* now option checking is easier with our options list */
-	for (cur = list; cur; cur = cur->next) {
-		/* initialize the parse structure */
-		mem_zero(&parsed, sizeof(cmdparsed_t));
-		parsed.name = cur->data;
-		parsed.argpos = cur->argpos;
-
-		/* if another data and is an argument (with '='), initialize it */
-		if (cur->next && cur->next->what == AN_ARGUMENT) {
-			parsed.arg = cur->next->data;
-			cur = cur->next;
-		}
-		if (cmd_found_opt(cmd, parsed.name, &popt, &pname, &oid, &nid)) {
-			/* found a defined option, store option reference */
-			parsed.optid = oid;
-			parsed.nameid = nid;
-			cb = popt->cb;
-
-			if (parsed.arg) {
-				/* we already have an '=' argument */
-				if (popt->argreq == ARG_NONE) {
-					parsed.error = CMDERR_REQ;	/* shouldn't be there */
-				}
-				else if (pname->argsep != ARGSEP_EQUAL) {
-					parsed.error = CMDERR_SEP;	/* should be separated with a space */
-				}
+			{
+				optlen = (int) strlen(argv[argi] + start);
+				if (argi < argc - 1 &&
+					cmdline_isoption(cl, argv[argi + 1]) == 0 &&
+					!cmdline_isendmark(cl, argv[argi + 1]))
+					got.opt_arg = argv[++argi];
 			}
-			else {
-				/* if the option may have an argument */
-				if (popt->argreq != ARG_NONE) {
-					if (pname->argsep == ARGSEP_EQUAL) {
-						parsed.error = CMDERR_SEP;	/* should be separated with an equal sign */
-					}
-					/* check the next to see if it's an option */
-					if (!cur->next) {
-						parsed.error |= CMDERR_REQ;
-					}
-					else {
-						if (cmd_found_opt(cmd, cur->next->data, &ptemp, &pname, &oid, &nid)) {
-							/* argument is in fact an option ! */
-							if (popt->argreq == ARG_REQUIRED)
-								parsed.error |= CMDERR_REQ;	/* should have an argument */
-						}
-						else {
-							/* next is considered as an argument */
-							cur = cur->next;
-							parsed.arg = cur->data;
-						}
-					}
-				}
-			}
-			ret = cb(cmd, &parsed, userdata);
+
+			got.opt_name = (char *) malloc(sizeof(char) * (optlen + 1));
+			if (got.opt_name == NULL)
+				return -1;
+			strncpy(got.opt_name, argv[cur] + start, optlen);
+			got.opt_name[optlen] = '\0';
 		}
-		else {
-			/* not a defined option */
-			parsed.optid = -1;
-			parsed.nameid = -1;
-			parsed.error = 0;
-			/* if default callback is defined in cmdline_t object */
-			if (cmd->cb)
-				ret = cmd->cb(cmd, &parsed, userdata);
+		else
+		{
+			cmdline_fillarg(&got, argv[argi]);
 		}
 
-		/* if last called user function returned 1, stop */
-		if (!ret)
+		/* check for defined options */
+		if (got.opt_name)
+		{
+			opt = cmdline_checkdefined(cl, &got);
+			if (opt)
+			{
+				got.optid = opt->id;
+				if (opt->cb)
+					cb = opt->cb;
+			}
+			else
+			{
+				if (FLAG(cl, CMDF_ONLYDEFS))
+					continue;
+				got.optid = -1;
+			}
+		}
+		if (!cb)
+			cb = cl->cb;
+		if ((ret = cb(cl, &got, userdata)) != 0)
 			break;
 	}
 
-	/* free cmddata_t .. */
-	while (list) {
-		cur = list->next;
-		if (list->what == AN_OPTION)	/* because argument is from argv */
-			free(list->data);
-		free(list);
-		list = cur;
-	}
+	if (got.opt_name)
+		free(got.opt_name);
 
 	return ret;
 }
 
-
-
-/* ========================================================================= */
-/* Static functions definition                                               */
-
 /* ------------------------------------------------------------------------- */
-/* cmd_opt_new()                                                             */
-
-static cmdopt_t *cmd_opt_new(char *name, e_argreq argreq, e_argsep argsep, char *descr, char *argdescr, cmdparse_cb cb) {
-
+int cmdline_addopt(cmdline_t cl, char sname, char *lname,
+				   cmdline_cb_t callback)
+{
 	cmdopt_t *newopt;
 
-	newopt = mem_new(cmdopt_t, 1);
-	if (!newopt)
-		return NULL;
-
-	if (cmd_opt_newname(newopt, name, argsep) < 0)
-		return NULL;
-
-	newopt->cb = cb;
-	newopt->argreq = argreq;
-
-	if (descr)
-		newopt->descr = strdup(descr);
-
-	if (argdescr)
-		newopt->argdescr = strdup(argdescr);
-
-	return newopt;
-
-}
-
-/* ------------------------------------------------------------------------- */
-/* cmd_opt_newname()                                                         */
-
-static int cmd_opt_newname(cmdopt_t *opt, char *altname, e_argsep altsep) {
-
-	cmdname_t *newname;
-	int esaved;
-
-	newname = mem_new(cmdname_t, 1);
-	if (!newname)
+	if ((newopt = (cmdopt_t *) malloc(sizeof(cmdopt_t))) == NULL)
 		return -1;
 
-	newname->name = strdup(altname);
-	if (!newname) {
-		esaved = errno;
-		free(newname);
-		reterror(esaved, -1);
-	}
+	newopt->id = cl->optcount + 1;
+	newopt->sname = sname;
+	newopt->lname = lname;
+	newopt->cb = callback;
+	newopt->next = cl->opthead;
+	cl->opthead = newopt;
 
-	newname->len = (int) strlen(altname);
-	newname->argsep = altsep;
-
-	if (opt->nhead) {
-		opt->ntail->next = newname;
-		opt->ntail = newname;
-	}
-	else {
-		opt->nhead = newname;
-		opt->ntail = newname;
-	}
-
-	return opt->ncount ++;
-
+	return ++ cl->optcount;
 }
 
 /* ------------------------------------------------------------------------- */
-/* cmd_opt_del()                                                             */
-
-static void cmd_opt_del(cmdopt_t *opt) {
-
-	cmdname_t *name, *next;
-
-	if (!opt)
-		return;
-
-	if (opt->argdescr)
-		free(opt->argdescr);
-
-	if (opt->descr)
-		free(opt->descr);
-
-	name = opt->nhead;
-	while (name) {
-		next = name->next;
-		free(name->name);
-		free(name);
-		name = next;
-	}
-	free(opt);
-
+int cmdline_addopt_if(cmdline_t cl, char sname, char *lname,
+					  cmdline_cb_t callback, int pred)
+{
+	if (pred)
+		return cmdline_addopt(cl, sname, lname, callback);
+	return -1;
 }
 
 /* ------------------------------------------------------------------------- */
-/* cmd_found-opt()                                                           */
+int cmdline_getopt(cmdline_t cl, int optid, char *sname, char **lname)
+{
+	cmdopt_t *opt;
+	if (!cl || optid < 0 || optid > cl->optcount)
+		return RETERROR(EINVAL, -1);
 
-static int cmd_found_opt(cmdline_t cmd, char *name, cmdopt_t **popt, cmdname_t **pname, int *poid, int *pnid) {
-
-	*popt = cmd->ohead;
-	*poid = 0;
-	*pnid = 0;
-	while (*popt) {
-		*pname = (*popt)->nhead;
-		while (*pname) {
-			if ((*pname)->name && !strcmp((*pname)->name, name))
-				return 1;
-			*pname = (*pname)->next;
-			++ *pnid;
+	opt = cl->opthead;
+	while (opt)
+	{
+		if (opt->id == optid)
+		{
+			*sname = opt->sname;
+			*lname = opt->lname;
+			return 0;
 		}
-		*popt = (*popt)->next;
-		++ *poid;
-		*pnid = 0;
 	}
-	*poid = -1;
-	*pnid = -1;
-	return 0;
-
+	return RETERROR(EINVAL, -1);
 }
 
-/* ------------------------------------------------------------------------- */
-/* cmd_new_data()                                                            */
-
-static void cmd_new_data(cmddata_t **list, cmddata_t **cur) {
-
-	cmddata_t *dt = mem_new(cmddata_t, 1);
-	if (*cur) {
-		(*cur)->next = dt;
-		dt->prev = *cur;
-		*cur = dt;
-	}
-	else {
-		*list = dt;
-		*cur = dt;
-	}
-
-}
-
-
-
-/* ========================================================================= */
 /* vi:set ts=4 sw=4: */
