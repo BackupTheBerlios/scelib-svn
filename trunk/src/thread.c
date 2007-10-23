@@ -1,8 +1,6 @@
 /*	scelib - Simple C Extension Library
  *  Copyright (C) 2005-2007 Richard 'riri' GILL <richard@houbathecat.info>
  *
- *  thread.c - multithreading handling functions.
- *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
  *  License as published by the Free Software Foundation; either
@@ -21,8 +19,15 @@
 #include "scelib/thread.h"
 #include "scelib/platform.h"
 #if PLATFORM_IS(UNIX)
+#include <pthread.h>
+#include <sched.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#else
+#define WIN32_LEAN_AND_MEAN		/* remove unusual definitions */
+#define STRICT					/* strict type checking */
+#define _WIN32_WINNT	0x0500	/* Windows 2000 minimum */
+#include <windows.h>
 #endif
 #include <stdlib.h>
 #include <errno.h>

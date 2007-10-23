@@ -1,8 +1,6 @@
 /*	scelib - Simple C Extension Library
  *  Copyright (C) 2005-2007 Richard 'riri' GILL <richard@houbathecat.info>
  *
- *  cmdline.c - command line handling functions.
- *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
  *  License as published by the Free Software Foundation; either
@@ -23,7 +21,11 @@
 #include <string.h>
 #include <errno.h>
 
+/* ------------------------------------------------------------------------- */
+
 #define FLAG(c, f)	(c->flags & (f))
+
+/* ------------------------------------------------------------------------- */
 
 typedef struct cmdopt_type cmdopt_t;
 

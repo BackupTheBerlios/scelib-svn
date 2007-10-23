@@ -1,8 +1,6 @@
 /*	scelib - Simple C Extension Library
  *  Copyright (C) 2005-2007 Richard 'riri' GILL <richard@houbathecat.info>
  *
- *  scelib.h - dispatch header file.
- *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
  *  License as published by the Free Software Foundation; either
@@ -16,6 +14,16 @@
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+/** @file
+ *	@brief All-in-one scelib header file.
+ *
+ *	scelib headers can be used in two ways, depending on your needs and
+ *	habits:
+ *	@li	You can include each scelib module separatly, using the dedicated
+ *		header file in the scelib directory
+ *	@li	You can include this header file, which then includes all modules'
+ *		headers.
  */
 
 #ifndef __SCELIB_H

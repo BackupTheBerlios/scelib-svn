@@ -1,8 +1,6 @@
 /*	scelib - Simple C Extension Library
  *  Copyright (C) 2005-2007 Richard 'riri' GILL <richard@houbathecat.info>
  *
- *  thread.h - multithreading handling declarations.
- *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
  *  License as published by the Free Software Foundation; either
@@ -17,6 +15,9 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+/** @file
+ *	@brief Basic multi-threading support.
+ */
 
 #ifndef __SCELIB_THREAD_H
 #define __SCELIB_THREAD_H
@@ -25,83 +26,99 @@
 
 SCELIB_BEGIN_CDECL
 
-/* ========================================================================= */
-/* types                                                                     */
-
-/* ------------------------------------------------------------------------- */
-/* thread locking object */
+/** Thread locking object.
+ *
+ */
 typedef struct lock_type *lock_t;
 
-/* ------------------------------------------------------------------------- */
-/* thread object */
+/** Thread object.
+ *
+ */
 typedef struct thread_type *thread_t;
 
-/* ------------------------------------------------------------------------- */
-/* user defined thread routine */
+/** User defined thread routine.
+ *
+ */
 typedef void (*thread_proc_t)(thread_t, void *);
 
-/* ========================================================================= */
-/* functions                                                                 */
-
-/* ------------------------------------------------------------------------- */
-/* Creates a new locker.                                                     */
+/** Creates a new locker.
+ *
+ */
 void thread_lock_new(lock_t lock);
 
-/* ------------------------------------------------------------------------- */
-/* Delete a previously created locker (should not be locked).                */
+/** Delete a previously created locker (should not be locked).
+ *
+ */
 void thread_lock_delete(lock_t lock);
 
-/* ------------------------------------------------------------------------- */
-/* Locks the scoped portion of code.                                         */
+/** Locks the scoped portion of code.
+ *
+ */
 void thread_lock(lock_t lock);
 
-/* ------------------------------------------------------------------------- */
-/* Tries to lock the scoped portion of code. Returns 1 if done the job of    */
-/* thread_lock(), or 0 if the object is already locked.                      */
+/** Tries to lock the scoped portion of code.
+ *
+ *	@return 1 if done the job of @ref thread_lock(), or 0 if the object is
+ *			already locked.
+ */
 int thread_trylock(lock_t lock);
 
-/* ------------------------------------------------------------------------- */
-/* Unlocks the scoped portion of code.                                       */
+/** Unlocks the scoped portion of code.
+ *
+ */
 void thread_unlock(lock_t lock);
 
-/* ------------------------------------------------------------------------- */
-/* Stores a data in a thread specific memory area.                           */
+/** Stores a data in a thread specific memory area.
+ *
+ */
 void thread_data_set(void *data);
 
-/* ------------------------------------------------------------------------- */
-/* Gets a previously stored data from a thread specific memory area.         */
+/** Gets a previously stored data from a thread specific memory area.
+ *
+ */
 void *thread_data_get(void);
 
-/* ------------------------------------------------------------------------- */
-/* Creates a suspended thread with the given routine, and passing it 'arg'.  */
+/** Creates a suspended thread with the given routine.
+ *
+ */
 thread_t thread_new(thread_proc_t proc, void *arg);
 
-/* ------------------------------------------------------------------------- */
-/* Starts the previously created thread.                                     */
+/** Starts the previously created thread.
+ *
+ */
 void thread_start(thread_t t);
 
-/* ------------------------------------------------------------------------- */
-/* Waits for terminaison of the given thread. If the thread returned a value */
-/* with thread_exit(), it's returned here, 0 is returned otherwise.          */
+/** Waits for terminaison of the given thread.
+ *
+ *	If the thread returned a value with @ref thread_exit(), it's returned here,
+ *	0 is returned otherwise.
+ */
 int thread_waitfor(thread_t t);
 
-/* ------------------------------------------------------------------------- */
-/* Detaches the current thread from the given one (not accessing its thread  */
-/* object anymore, and thus not waiting for its terminaison).                */
+/** Detaches the thread from the current given one.
+ *
+ *	By this call, the thread object isn't accessed anymore, and thus the
+ *	current thread can't (and so don't have to) wait for its terminaison.
+ */
 void thread_detach(thread_t t);
 
-/* ------------------------------------------------------------------------- */
-/* Yields the remaining allocated timeslice, to give it to other threads.    */
+/** Yields the remaining allocated timeslice, to give it to other threads.
+ *
+ */
 void thread_yield(void);
 
-/* ------------------------------------------------------------------------- */
-/* Makes the current thread sleeping during the given number of seconds (can */
-/* define as little as miliseconds).                                         */
+/** Makes the current thread sleeping during seconds.
+ *
+ *	As the number is a floating point value, it can be defined as little as
+ *	miliseconds (not less for system limitations).
+ */
 void thread_sleep(double seconds);
 
-/* ------------------------------------------------------------------------- */
-/* Thread routines doesn't return any value, but they can return one to the  */
-/* thread which created it, using this function. See thread_waitfor().       */
+/** Exit current thread with a specific exit code.
+ *
+ *	Thread routines doesn't return any value, but they can return one to the
+ *	thread which created it, using this function. See @ref thread_waitfor().
+ */
 void thread_exit(int retval);
 
 SCELIB_END_CDECL

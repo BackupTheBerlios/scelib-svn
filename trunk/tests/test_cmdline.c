@@ -1,6 +1,7 @@
 #include <scelib/cmdline.h>
 #include <scelib/platform.h>
 #include <stdio.h>
+#include <string.h>
 
 struct opt
 {
@@ -153,7 +154,7 @@ static int test(char *progname, struct test *t)
 		while (++o);
 	}
 
-	t->argv[0] = strrchr(progname, PLATFORM_PATHSEPC);
+	t->argv[0] = strrchr(progname, PLATFORM_DIRSEPC);
 	if (t->argv[0] == NULL)
 		t->argv[0] = progname;
 	else
