@@ -234,7 +234,7 @@ map_iter_t map_iter_new(map_t map);
  *
  *	@param[in] iter	the iterator object to delete
  */
-void map_iter_delete(map_iter_t iter);
+int map_iter_delete(map_iter_t iter);
 
 /** Get the next (or first) key/value pair from the map.
  *
@@ -249,6 +249,10 @@ void map_iter_delete(map_iter_t iter);
  *			of the map.
  */
 int map_iter_next(map_iter_t iter, void **key, void **data);
+
+#ifdef _DEBUG
+int map_dump(map_t map);
+#endif
 
 SCELIB_END_CDECL
 
